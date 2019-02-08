@@ -253,41 +253,68 @@
          * @param  {String} string String to search for an autocompletion
          * @return {Promise}
          */
-        autocomplete: function (string) {
-            return new Promise (function (resolve, reject) {
-                $.ajax({
-                    url: '/webcheckout/rest/resourceType/autocomplete',
-                    type: "POST",
-                    dataType: "json",
-                    data: `{"string": "${string}", "properties": ["name", "description"]}`,
-                    contentType: "application/json",
-                    headers: {
-                        Accept: "application/json, text/plain, */*"
-                    },
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    success: function (d) {
-                        if (d == null || d.payload == null) resolve([]);
-                        else {
-                            let resources = [];
-                            let results = d.payload;
+        autocomplete: {
+            resource: function (string) {
+                return new Promise (function (resolve, reject) {
+                    $.ajax({
+                        url: '/webcheckout/rest/resourceType/autocomplete',
+                        type: "POST",
+                        dataType: "json",
+                        data: `{"string": "${string}", "properties": ["name", "description"]}`,
+                        contentType: "application/json",
+                        headers: {
+                            Accept: "application/json, text/plain, */*"
+                        },
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        success: function (d) {
+                            if (d == null || d.payload == null) resolve([]);
+                            else {
+                                let resources = [];
+                                let results = d.payload;
 
-                            for (let result of results) {
-                                if (result.label == "OIT") {
-                                    for (let value of result.values) {
-                                        resources.push({
-                                            oid: value.oid,
-                                            name: value.name
-                                        });
+                                for (let result of results) {
+                                    if (result.label == "OIT") {
+                                        for (let value of result.values) {
+                                            resources.push({
+                                                oid: value.oid,
+                                                name: value.name
+                                            });
+                                        }
                                     }
                                 }
+                                resolve(resources);
                             }
-                            resolve(resources);
                         }
-                    }
+                    });
                 });
-            });
+            },
+            person: function (id) {
+                return new Promise (function (resolve, reject) {
+                    $.ajax({
+                        url: '/webcheckout/rest/person/Autocomplete',
+                        type: "POST",
+                        dataType: "json",
+                        data: `{"string": "${id}", "limit": 30}`,
+                        contentType: "application/json",
+                        headers: {
+                            Accept: "application/json, text/plain, */*"
+                        },
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        success: function (d) {
+                            if (d == null || d.payload == null) resolve([]);
+                            else {
+                                let userIdPayload = d.payload[1];
+
+                                resolve(d.payload[1].values);
+                            }
+                        }
+                    });
+                });
+            }
         },
 
         /**
@@ -466,7 +493,7 @@
                 }).on('keyup', '.type.form-control', function () { // look up auto complete values
                     let value = $(this).val();
                     $(this).removeClass('autocompleted');
-                    Requests.autocomplete(value).then((results) => {
+                    Requests.autocomplete.resource(value).then((results) => {
                         if ($(this).is(':focus')) { // only show the results if we are still focuses on the input
                             let list = '';
                             for (let result of results) {
@@ -478,7 +505,7 @@
                 }).on('blur', '.type.form-control', function () { // if we click off the input and have no auto completed
                     if (!$(this).hasClass('autocompleted')) {
                         let value = $(this).val();
-                        Requests.autocomplete(value).then((results) => { // check the current value of the input and see if we can derive an auto completed value anyways
+                        Requests.autocomplete.resource(value).then((results) => { // check the current value of the input and see if we can derive an auto completed value anyways
                             if (results.length == 1) { // if the input only gives one autocorrected result then we can use that result to finish the completion
                                 let result = results[0];
                                 $(this).data('oid', result.oid).val(result.name).addClass('autocompleted');
@@ -575,10 +602,27 @@
         $(this).val($(this).val().replace(/OIT-/, ''));
     }
 
+    let patronTimer;
+    function searchPatron() {
+        let patronId = $(this).val();
+        console.log(patronId)
+        clearTimeout(patronTimer);
+        patronTimer = setTimeout(function () {
+            Requests.autocomplete.person(patronId).then(function (results) {
+                if (results.length == 1) {
+                    console.log("WE FOUND A MATCH");
+                }
+            });
+            console.log("SCAN HAS COMPLETED", patronId);
+        }, 50);
+    }
+
     (function main () {
         $('#new-person-wizard').removeAttr('href').on('click',  modifiedNewPerson);
         $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
         $("#input-barcode").on("keydown", removePrefix);
+
+        $("#input-patron").on("keydown", searchPatron);
     })();
 
 })(jQuery);
