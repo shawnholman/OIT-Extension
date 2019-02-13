@@ -44,7 +44,7 @@
          * @returns {*|jQuery}
          */
         openLightBox: function openLightBox (content, afterOpen) {
-            return $.featherlight(null, {html:content, afterOpen});
+            return $.featherlight(null, {html:content, afterOpen, openSpeed: -200});
         },
 
         /**
@@ -308,7 +308,6 @@
                             if (d == null || d.payload == null) resolve([]);
                             else {
                                 for (let payload of d.payload) {
-                                    console.log(payload)
                                     if (payload.values != null) {
                                         resolve(payload.values);
                                         return;
@@ -642,9 +641,21 @@
         let allocationLink = document.getElementById("allocation").getAttribute("href");
         return allocationLink.match(/allocation\=([0-9]+)/)[1];
     }
+    
+    let createPersonWell = async function (persondata) {
+            // skip a spot here since the values start at 1
+            let classes = ['Other', 'Continuing education', 'Undergraduate freshman', 'Undergraduate sophomore', 'Undergraduate junior', 'Undergraduate senior', 'Graduate 1', 'Graduate 2', 'Employee', 'Faculty'];
+            let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {
+                return "(" + $1 + ") " + $2 + "-" + $3;
+            });
+
+            persondata.class = classes[persondata.class - 1];
+            persondata.formatedNumber = formatedNumber;
+            return Utility.pullResource('WebCheckout/html/newPerson/personInitializer.html', persondata);
+        };
 
     let patronTimer;
-    function searchPatron() {
+    function searchPatron(immediate) {
         let patron = $(this).val();
         
         clearTimeout(patronTimer);
@@ -662,11 +673,30 @@
                     $(".patron-info-dept").text(" Dept: " + patron.department);
                 });
             } else {
-                console.log("USER NOT FOUND")
+                $('.patron-info').removeClass('hidden').find('.patron-info-id').text("Not found in WebCheckout. Trying to create user from logging system.");
+                
+                
+                let inLogging = true;
+                if (inLogging) {
+                    let wco = "dWdhaWQ6NjIwMTMxODExMzkwMTc5MCxmaXJzdG5hbWU6RW1pbHksbGFzdG5hbWU6QmVubmV0dCxjbGFzczo3LGRlcGFydG1lbnQ6Q01TRCxwaG9uZTo5MTIgNjE0NDc3NCxlbWFpbDplYWI4OTA4NEB1Z2EuZWR1";
+                    let person = Utility.parseToDataString(wco);
+                    Utility.openLightBox(await createPersonWell(person), function () {
+                        setTimeout(function () {
+                            $("#input-patron").blur().val("Emily Bennet");
+                            $('.patron-info').removeClass('hidden');
+                            $(".patron-info-id").text("6201318113901790");
+                            $(".patron-info-dept").text(" Dept: CMSD");
+                        }, 500);
+                        // add the actual user here
+                    });
+                } else {
+                    $("#input-patron").css('background-color', 'red');
+                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text("User does not exist in either systems.")
+                }
                 //create user here
             }
             console.log("SCAN HAS COMPLETED", patron);
-        }, 50);
+        }, immediate ? 0 : 50);
     }
 
     (function main () {
@@ -675,7 +705,7 @@
         $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
         $("#input-barcode").on("keydown", removePrefix);
 
-        $("#input-patron").on("keyup", searchPatron);
+        //$("#input-patron").on("keyup", searchPatron);
     })();
 
 })(jQuery);
