@@ -307,9 +307,14 @@
                         success: function (d) {
                             if (d == null || d.payload == null) resolve([]);
                             else {
-                                let userIdPayload = d.payload[1];
-
-                                resolve(d.payload[1].values);
+                                for (let payload of d.payload) {
+                                    console.log(payload)
+                                    if (payload.values != null) {
+                                        resolve(payload.values);
+                                        return;
+                                    }
+                                }
+                                resolve([]);
                             }
                         }
                     });
@@ -640,14 +645,15 @@
 
     let patronTimer;
     function searchPatron() {
-        let patronId = $(this).val();
-        console.log(patronId)
+        let patron = $(this).val();
+        
         clearTimeout(patronTimer);
         patronTimer = setTimeout(async function () {
-            let persons = await Requests.autocomplete.person(patronId);
+            let persons = await Requests.autocomplete.person(patron);
             
-            console.log(persons, "person")
-            if (persons != null && /*patronId.length == 16 && */persons.length == 1) {
+            console.log(persons, "person". persons != null, persons.length)
+            if (persons != null && persons.length == 1) {
+                console.log("FOUND")
                 let oid = persons[0].oid;
                 Requests.setPatron(oid).then(function (patron) {
                     $("#input-patron").blur().val(patron.name);
@@ -659,7 +665,7 @@
                 console.log("USER NOT FOUND")
                 //create user here
             }
-            console.log("SCAN HAS COMPLETED", patronId);
+            console.log("SCAN HAS COMPLETED", patron);
         }, 50);
     }
 
