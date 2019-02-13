@@ -316,6 +316,32 @@
                 });
             }
         },
+        
+        setPatron: function (oid) {
+            return new Promise (function (resolve, reject) {
+                    $.ajax({
+                        url: '/webcheckout/wco/api/set-patron',
+                        type: "POST",
+                        //dataType: "json",
+                        data: {
+                            oid: oid,
+                            timeline: true,
+                            allocation: getAllocationId()
+                        },
+                        //data: `{"oid": "${oid}", "timeline": true, "allocation": "${getAllocationId ()}"}`,
+                        //contentType: "application/json",
+                        /*headers: {
+                            Accept: "application/json, text/plain, *"
+                        },*/
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        success: function (d) {
+                            resolve(d.patron);
+                        }
+                    });
+                });
+        },
 
         /**
          * Adds a set of resources to WebCheckout
@@ -601,28 +627,49 @@
     function removePrefix () {
         $(this).val($(this).val().replace(/OIT-/, ''));
     }
+    
+     
+    /**
+     * Looks for the allocation ID on the page. In particular, there is an element with id: allocation that has 
+     * a link with this allocation number. In case this link changes, this method will need to be updated.
+     */
+    function getAllocationId () {
+        let allocationLink = document.getElementById("allocation").getAttribute("href");
+        return allocationLink.match(/allocation\=([0-9]+)/)[1];
+    }
 
     let patronTimer;
     function searchPatron() {
         let patronId = $(this).val();
         console.log(patronId)
         clearTimeout(patronTimer);
-        patronTimer = setTimeout(function () {
-            Requests.autocomplete.person(patronId).then(function (results) {
-                if (results.length == 1) {
-                    console.log("WE FOUND A MATCH");
-                }
-            });
+        patronTimer = setTimeout(async function () {
+            let persons = await Requests.autocomplete.person(patronId);
+            
+            console.log(persons, "person")
+            if (persons != null && /*patronId.length == 16 && */persons.length == 1) {
+                let oid = persons[0].oid;
+                Requests.setPatron(oid).then(function (patron) {
+                    $("#input-patron").blur().val(patron.name);
+                    $('.patron-info').removeClass('hidden');
+                    $(".patron-info-id").text(patron.userid);
+                    $(".patron-info-dept").text(" Dept: " + patron.department);
+                });
+            } else {
+                console.log("USER NOT FOUND")
+                //create user here
+            }
             console.log("SCAN HAS COMPLETED", patronId);
         }, 50);
     }
 
     (function main () {
+        console.log(getAllocationId())
         $('#new-person-wizard').removeAttr('href').on('click',  modifiedNewPerson);
         $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
         $("#input-barcode").on("keydown", removePrefix);
 
-        $("#input-patron").on("keydown", searchPatron);
+        $("#input-patron").on("keyup", searchPatron);
     })();
 
 })(jQuery);
