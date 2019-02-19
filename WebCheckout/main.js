@@ -93,7 +93,7 @@
             for (let number of numbers) {
                 sum += number;
             }
-            return sum/len;
+            return sum/numbers.length;
         }
     };
 
@@ -215,6 +215,26 @@
 
     // holds different types of requests that we will be pulling
     let Requests = {
+        /**
+         * All of these requests should be done here through the COE OIT System
+         */
+        COEOITAPI: {
+            findUser: function (userid) {
+                //userid = "6235678118879000";
+                return  new Promise(function (resolve, reject) {
+                    $.ajax({
+                        url: "https://coeoit.coe.uga.edu:47715/api/v1/webcheckout/user/" + userid,
+                        type: "GET",
+                        success: function (person) {
+                            resolve(person);
+                        },
+                        error: function (err) {
+                            reject();
+                        }
+                    });
+                });
+            }    
+        },
         /**
          * Adds a person the WebCheckout database
          * @param {Array} data A set of data of the person
@@ -411,7 +431,7 @@
                 return "(" + $1 + ") " + $2 + "-" + $3;
             });
 
-            persondata.class = classes[persondata.class - 1];
+            persondata.class = !isNaN(persondata.class) ? classes[persondata.class - 1] : persondata.class;
             persondata.formatedNumber = formatedNumber;
             return Utility.pullResource('WebCheckout/html/newPerson/newPersonWell.html', persondata);
         };
@@ -621,7 +641,7 @@
                         req.cancel();
                         $('#cancel, #finishadding, #addresource').attr('disabled', true);
                         $('.featherlight-inner .content .progress').hide().parent().prev().hide();
-                        cons('Cancelled. Current Resource will be revoked and any pending resources will be ignored.', 'error');
+                        console('Cancelled. Current Resource will be revoked and any pending resources will be ignored.', 'error');
                     });
                 });
             });
@@ -649,10 +669,10 @@
                 return "(" + $1 + ") " + $2 + "-" + $3;
             });
 
-            persondata.class = classes[persondata.class - 1];
+            persondata.class = !isNaN(persondata.class) ? classes[persondata.class - 1] : persondata.class;
             persondata.formatedNumber = formatedNumber;
             return Utility.pullResource('WebCheckout/html/newPerson/personInitializer.html', persondata);
-        };
+    };
 
     let patronTimer;
     function searchPatron(immediate) {
@@ -663,7 +683,7 @@
             let persons = await Requests.autocomplete.person(patron);
             
             console.log(persons, "person". persons != null, persons.length)
-            if (persons != null && persons.length == 1) {
+            if (false && persons != null && persons.length == 1) {
                 console.log("FOUND")
                 let oid = persons[0].oid;
                 Requests.setPatron(oid).then(function (patron) {
@@ -675,12 +695,13 @@
             } else {
                 $('.patron-info').removeClass('hidden').find('.patron-info-id').text("Not found in WebCheckout. Trying to create user from logging system.");
                 
+                try {
+                    let oitperson = await Requests.COEOITAPI.findUser(patron);
+                    let parsedPerson = Utility.parseToDataString(oitperson.wcoCode);
+                    
+                    $("#input-patron").css("background-color", "white");
                 
-                let inLogging = true;
-                if (inLogging) {
-                    let wco = "dWdhaWQ6NjIwMTMxODExMzkwMTc5MCxmaXJzdG5hbWU6RW1pbHksbGFzdG5hbWU6QmVubmV0dCxjbGFzczo3LGRlcGFydG1lbnQ6Q01TRCxwaG9uZTo5MTIgNjE0NDc3NCxlbWFpbDplYWI4OTA4NEB1Z2EuZWR1";
-                    let person = Utility.parseToDataString(wco);
-                    Utility.openLightBox(await createPersonWell(person), function () {
+                    Utility.openLightBox(await createPersonWell(parsedPerson), function () {
                         setTimeout(function () {
                             $("#input-patron").blur().val("Emily Bennet");
                             $('.patron-info').removeClass('hidden');
@@ -689,14 +710,14 @@
                         }, 500);
                         // add the actual user here
                     });
-                } else {
+                } catch (e) {
                     $("#input-patron").css('background-color', 'red');
                     $('.patron-info').removeClass('hidden').find('.patron-info-id').text("User does not exist in either systems.")
                 }
                 //create user here
             }
             console.log("SCAN HAS COMPLETED", patron);
-        }, immediate ? 0 : 50);
+        }, immediate === true ? 0 : 50);
     }
 
     (function main () {
