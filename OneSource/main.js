@@ -29,8 +29,7 @@
 
     // wait for the iFrame before we can mess with it
     iframe.onload = function () {
-        let frameWindow = iframe.contentWindow;
-        let doc = frameWindow.document;
+        let doc = iframe.contentDocument;
         
         // just to break things up little, this function takes care of setting the punch type and time reporting code inputs
         function setInputs () {
@@ -41,6 +40,10 @@
             doc.getElementById(PUNCH_TYPE_INPUT).value = defaultPunchType;
             // set the time reporting code to regular
             doc.getElementById(TIME_REPORTING_INPUT).value = "00REG";
+            
+            // one source requires that the input is focused in order to record the input
+            doc.getElementById(TIME_REPORTING_INPUT).focus();
+            doc.getElementById(PUNCH_TYPE_INPUT).focus();
         }
 
 

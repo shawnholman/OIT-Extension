@@ -1,9 +1,12 @@
 (function($) {
     // detect if we are using chrome
     const globalRuntime = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime) ? chrome.runtime : browser.runtime;
-
-
+    
+    // cache resources
     let cache = {};
+    
+    // patron timer in order to verify a scan
+    let patronTimer;
 
     const Utility = {
         /**
@@ -191,7 +194,7 @@
                         globalTimes.push(performance.now() - startTime);
                         return makeFrameRequest(frames).then(resolve, reject).progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests
                     }
-                }).error(function () { // if something goes wrong then we will default back to the checkout page
+                }).fail(function () { // if something goes wrong then we will default back to the checkout page
                     $.post('?method=checkout-jump');
                     reject('error');
                 });
@@ -229,7 +232,7 @@
                             resolve(person);
                         },
                         error: function (err) {
-                            reject();
+                            reject("User does not exist in either systems.");
                         }
                     });
                 });
@@ -264,7 +267,8 @@
                         "new-person-contact-form.email": data.email
                     }
                 },
-                { url: '?method=new-person-create-finish', finishing: true }
+                { url: '?method=new-person-create-finish' },
+                { url: '?method=checkout-jump', finishing: true },
             ]);
         },
 
@@ -658,11 +662,12 @@
      * a link with this allocation number. In case this link changes, this method will need to be updated.
      */
     function getAllocationId () {
+        if (document.getElementById("allocation") == null) return;
         let allocationLink = document.getElementById("allocation").getAttribute("href");
         return allocationLink.match(/allocation\=([0-9]+)/)[1];
     }
     
-    let createPersonWell = async function (persondata) {
+    async function createPersonWell(persondata) {
             // skip a spot here since the values start at 1
             let classes = ['Other', 'Continuing education', 'Undergraduate freshman', 'Undergraduate sophomore', 'Undergraduate junior', 'Undergraduate senior', 'Graduate 1', 'Graduate 2', 'Employee', 'Faculty'];
             let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {
@@ -673,60 +678,92 @@
             persondata.formatedNumber = formatedNumber;
             return Utility.pullResource('WebCheckout/html/newPerson/personInitializer.html', persondata);
     };
+    
+    async function findPatronWebCheckout (patronid, found, notfound) {
+        let persons = await Requests.autocomplete.person(patronid);
+        if (persons != null && persons.length == 1) { 
+            found(persons[0]);
+        } else {
+            console.log(persons);
+            let multipleEntries = persons != null ? persons.length > 1 : false;
+            notfound(multipleEntries);
+        }
+    }
+    
+    function setWebCheckoutPatron (id) {
+        return Requests.setPatron(id).then(function (patron) {
+            $("#input-patron").css('color', 'black').blur().val(patron.name);
+            $('.patron-info').removeClass('hidden');
+            $(".patron-info-id").text(patron.userid);
+            $(".patron-info-dept").text(" Dept: " + patron.department);
+            $("#input-barcode").focus(); // add focus to input where you scan barcodes so that you do not have to click it 
+ 
+            $.featherlight.close();
+        });
+    };
 
-    let patronTimer;
     function searchPatron(immediate) {
         let patron = $(this).val();
         
         clearTimeout(patronTimer);
-        patronTimer = setTimeout(async function () {
-            let persons = await Requests.autocomplete.person(patron);
+        
+        if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters
+            $('.patron-info').addClass('hidden');
+            $("#input-patron").css('color', 'black');
+            return;
+        }
             
-            console.log(persons, "person". persons != null, persons.length)
-            if (false && persons != null && persons.length == 1) {
-                console.log("FOUND")
-                let oid = persons[0].oid;
-                Requests.setPatron(oid).then(function (patron) {
-                    $("#input-patron").blur().val(patron.name);
-                    $('.patron-info').removeClass('hidden');
-                    $(".patron-info-id").text(patron.userid);
-                    $(".patron-info-dept").text(" Dept: " + patron.department);
-                });
-            } else {
-                $('.patron-info').removeClass('hidden').find('.patron-info-id').text("Not found in WebCheckout. Trying to create user from logging system.");
-                
+        patronTimer = setTimeout(async function () {
+            findPatronWebCheckout(patron, function (person) {
+                setWebCheckoutPatron(person.oid);
+            }, async function (multipleEntries) {
                 try {
+                    if (multipleEntries) {
+                        throw "Unique identity was unable to be found";
+                    }
+                        
                     let oitperson = await Requests.COEOITAPI.findUser(patron);
                     let parsedPerson = Utility.parseToDataString(oitperson.wcoCode);
                     
-                    $("#input-patron").css("background-color", "white");
+                    $("#input-patron").css("color", "black");
                 
                     Utility.openLightBox(await createPersonWell(parsedPerson), function () {
-                        setTimeout(function () {
-                            $("#input-patron").blur().val("Emily Bennet");
-                            $('.patron-info').removeClass('hidden');
-                            $(".patron-info-id").text("6201318113901790");
-                            $(".patron-info-dept").text(" Dept: CMSD");
-                        }, 500);
-                        // add the actual user here
+                        // add the user
+                        let req = Requests.addPerson(parsedPerson).then(() => { // create the request
+                            $("#person-ticket").parent().prepend('<div class="alert alert-success"><strong>Success!</strong> User has been added!</div>');
+                            $('#person-ticket .progress').hide();
+                            
+                            findPatronWebCheckout(patron, function (person) {
+                                setWebCheckoutPatron(person.oid);
+                            });
+                        });
+                        req.progress(function (prog, frame) {
+                            $('#person-ticket .progress-bar').attr('aria-valuenow', prog.percent*100).width(prog.percent*100 + '%');
+                        });
+                        
                     });
-                } catch (e) {
-                    $("#input-patron").css('background-color', 'red');
-                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text("User does not exist in either systems.")
+                } catch (message) {
+                    $("#input-patron").css('color', 'red');
+                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text(message)
                 }
-                //create user here
-            }
-            console.log("SCAN HAS COMPLETED", patron);
+            });
         }, immediate === true ? 0 : 50);
     }
 
     (function main () {
-        console.log(getAllocationId())
         $('#new-person-wizard').removeAttr('href').on('click',  modifiedNewPerson);
         $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
-        $("#input-barcode").on("keydown", removePrefix);
-
-        //$("#input-patron").on("keyup", searchPatron);
+        $("#input-barcode, textarea[id^='rapid']").on("keydown", removePrefix);
+        
+        $("#input-patron").on("keyup", searchPatron);
+        $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
+            $("#input-patron").css("color", "black");
+        });
     })();
+    
+    //Append your inject.js to "real" webpage. So will it can full access to webpate.
+    var s = document.createElement('script');
+    s.src = chrome.extension.getURL('WebCheckout/inject.js');
+    (document.head || document.documentElement).appendChild(s);
 
 })(jQuery);
