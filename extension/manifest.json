@@ -10,11 +10,9 @@
       "run_at": "document_end"
    } ],
    "description": "This extension was built to modify OIT Systems that we do not have direct access to.",
-   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmJesT+lNZ7VkKRVF8JTgfPRYMBFNXGheeg8YV5EXiOHlWE3xrfQC0OmiZS1mBtTLzbMr6Xm+xY/QtcG/UaiNUXEB38Ejfzj50Gl1deaOsak2cuGJBxdIEBHVvi/9sV3UQ2seCwjcrlmLrF2jSAJ99ywjR6g+E2FEjSDFX+3tElC/KjURiYzQsbjf4Z98JhJdnpbaaVK3cGyE1+WBONseGNa3mF5JOpoi9ZDhdXzG4EYZM52yGPkv9aevRzEHch1KUildrBFAnJDl7jp0QHruEgS0ibd7WEsKD43aCV7wdAKsIkCQsEe3J+vgh3fUq1Vkvgwqk/Iuwv3G9xK2I81H+QIDAQAB",
    "manifest_version": 2,
    "name": "OITLogging",
-   "permissions": [  ],
-   "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "1.0.3",
+   "permissions": ["https://webcheckout2.coe.uga.edu/webcheckout/wco/", "https://coeoit.coe.uga.edu:47715/"],
+   "version": "1.0.4.5",
    "web_accessible_resources": [ "*" ]
 }

@@ -451,78 +451,6 @@
         }
     }
 
-    function modifiedNewPerson () {
-        let createPersonWell = async function (persondata) {
-            // skip a spot here since the values start at 1
-            let classes = ['Other', 'Continuing education', 'Undergraduate freshman', 'Undergraduate sophomore', 'Undergraduate junior', 'Undergraduate senior', 'Graduate 1', 'Graduate 2', 'Employee', 'Faculty'];
-            let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {
-                return "(" + $1 + ") " + $2 + "-" + $3;
-            });
-
-            persondata.class = !isNaN(persondata.class) ? classes[persondata.class - 1] : persondata.class;
-            persondata.formatedNumber = formatedNumber;
-            return Utility.pullResource('WebCheckout/html/newPerson/newPersonWell.html', persondata);
-        };
-
-        Utility.pullResource('WebCheckout/html/newPerson/newPerson.html', {}, true).then(function (content) {
-            Utility.openLightBox(content, async function () {
-                let person = null;
-
-                $(document).on('change paste keyup', '#persondata', function (e) {
-                    setTimeout(async () => { // add a timeout here so that we can get the proper value of the paste event
-                        person = Utility.parseToDataString($(this).val());
-
-                        $('.error-message').remove();
-                        // if the person contains all of the correct data
-                        if (person && Utility.objectContainsAll(person, ['ugaid', 'firstname', 'lastname', 'class', 'department', 'email', 'phone'])) {
-                            $(this).parent().html(await createPersonWell(person));
-
-                            $('#addperson').attr('disabled', false);
-                            $('#cancel').attr('disabled', false).off('click').on('click', function () {
-                                $(this).attr('disabled', true).parent().prev().html('<textarea id="persondata" placeholder="Enter unique user code.."></textarea>');
-                            });
-                        } else { // if not we will give an error
-                            person = null;
-                            $(this).addClass('error').before('<div class="error-message" style="margin-bottom: 4px;text-align: center;color: #e00000;">Incorrect Code</div>')
-                        }
-                    }, 5);
-                });
-
-                $('#originalform').on('click', function () {
-                    document.location = '?method=new-person-wizard';
-                });
-
-                $('#addperson').on('click', function () { // when we add the person
-                    if (person != null) { // if we have a person then..
-                        $('#cancel').attr('disabled', false); // open up the cancel button
-                        $('#person-ticket .progress').show();
-                        $(this).val("Adding...").add('#originalform').attr('disabled', true);
-
-                        let req = Requests.addPerson(person).then(() => { // create the request
-                            $(this).val("Added").removeClass('btn-primary').addClass('btn-success').parent().prev().prepend('<div class="alert alert-success"><strong>Success!</strong> User has been added!</div>');
-                            $('#person-ticket .progress').hide();
-                            setTimeout(() => {
-                                $.featherlight.close();
-                            }, 2000);
-                        });
-                        req.progress(function (prog, frame) {
-                            let cantCancel = (frame != null && frame.hasOwnProperty('finishing') && frame.finishing == true) || prog.total - prog.completed == 1;
-                            $('#cancel').attr('disabled', cantCancel);
-                            $('#person-ticket .progress-bar').attr('aria-valuenow', prog.percent*100).width(prog.percent*100 + '%');
-                        });
-
-                        $("#cancel").off('click').on('click', () => {
-                            req.cancel();
-                            $(this).val("Add Person").add('#originalform').attr('disabled', false);
-                            $('#cancel').attr('disabled', true);
-                            $('#person-ticket .progress').hide();
-                        });
-                    }
-                });
-            });
-        });
-    }
-
     async function modifiedResourceAdder () {
         let inputRow = await Utility.pullResource('WebCheckout/html/newResource/inputRow.html', {}, true);
 
@@ -736,6 +664,15 @@
             $("#input-patron").css('color', 'black');
             return;
         }
+        
+        // if the patron we are searching is being search by number then we need to do a few things
+        if (!isNaN(Number(patron)) && patron.length == 16) {
+            // Historic Context for this line of code:
+            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
+            // Starting April of 2019, the uga id's only displayed the 81# in the back of it, but the barcode's still scans as 16 digits. For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
+            // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.
+            patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#
+        }
             
         patronTimer = setTimeout(async function () {
             findPatronWebCheckout(patron, function (person) {
@@ -777,7 +714,6 @@
     }
 
     (function main () {
-        $('#new-person-wizard').removeAttr('href').on('click',  modifiedNewPerson);
         $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
         $("#input-barcode, textarea[id^='rapid']").on("keydown", removePrefix);
         
