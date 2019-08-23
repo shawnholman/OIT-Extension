@@ -4,7 +4,7 @@ var fs = require('fs');
 
 gulp.task('compress', () => {
     var { version } = JSON.parse(fs.readFileSync('./extension/manifest.json'));         
-    return gulp.src('extension/*')
+    return gulp.src('extension/**')
         .pipe(zip(`extension-${version}.zip`))
         .pipe(gulp.dest('prod'))
 });
