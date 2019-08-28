@@ -1,13 +1,18 @@
 (function($) {
-    // detect if we are using chrome
+    /** Detect which runtime variable to use so that this extension is compatible with chrome, firefox, opera, and safari */
     const globalRuntime = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime) ? chrome.runtime : browser.runtime;
+    
+    /**
+     * The host of the webcheckout system. Needed for firefox due to https://github.com/greasemonkey/greasemonkey/issues/2680
+     */
+    const host = "https://webcheckout2.coe.uga.edu";
     
     // cache resources
     let cache = {};
     
     // patron timer in order to verify a scan
     let patronTimer;
-
+¬
     const Utility = {
         /**
          * Pulls a resource from the local extension.
@@ -305,7 +310,7 @@
             resource: function (string) {
                 return new Promise (function (resolve, reject) {
                     $.ajax({
-                        url: '/webcheckout/rest/resourceType/autocomplete',
+                        url: host + '/webcheckout/rest/resourceType/autocomplete',
                         type: "POST",
                         dataType: "json",
                         data: `{"string": "${string}", "properties": ["name", "description"]}`,
@@ -340,8 +345,10 @@
             },
             person: function (id) {
                 return new Promise (function (resolve, reject) {
+                    console.log("Find person ajax");
+                    console.log(`{"string": "${id}", "limit": 30}`);
                     $.ajax({
-                        url: '/webcheckout/rest/person/Autocomplete',
+                        url: host + '/webcheckout/rest/person/Autocomplete',
                         type: "POST",
                         dataType: "json",
                         data: `{"string": "${id}", "limit": 30}`,
@@ -353,6 +360,7 @@
                             withCredentials: true
                         },
                         success: function (d) {
+                            console.log("RESPONE", d)
                             if (d == null || d.payload == null) resolve([]);
                             else {
                                 for (let payload of d.payload) {
@@ -363,6 +371,9 @@
                                 }
                                 resolve([]);
                             }
+                        },
+                        error: function (d) {
+                            console.error("FAIL", d);
                         }
                     });
                 });
@@ -372,19 +383,13 @@
         setPatron: function (oid) {
             return new Promise (function (resolve, reject) {
                     $.ajax({
-                        url: '/webcheckout/wco/api/set-patron',
+                        url: host + '/webcheckout/wco/api/set-patron',
                         type: "POST",
-                        //dataType: "json",
                         data: {
                             oid: oid,
                             timeline: true,
                             allocation: getAllocationId()
                         },
-                        //data: `{"oid": "${oid}", "timeline": true, "allocation": "${getAllocationId ()}"}`,
-                        //contentType: "application/json",
-                        /*headers: {
-                            Accept: "application/json, text/plain, *"
-                        },*/
                         xhrFields: {
                             withCredentials: true
                         },
@@ -423,7 +428,7 @@
                                 let reg = /\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;
                                 let oid = resp.match(reg)[1];
                                 $.ajax({
-                                    url: '/webcheckout/rest/resource/update',
+                                    url: host + '/webcheckout/rest/resource/update',
                                     type: "POST",
                                     dataType: "json",
                                     data: '{"oid": ' + oid + ', "values": {"description": "' + description + '"}}',
@@ -621,7 +626,18 @@
     
     async function createPersonWell(persondata) {
             // skip a spot here since the values start at 1
-            let classes = ['Other', 'Continuing education', 'Undergraduate freshman', 'Undergraduate sophomore', 'Undergraduate junior', 'Undergraduate senior', 'Graduate 1', 'Graduate 2', 'Employee', 'Faculty'];
+            let classes = [
+                'Other', 
+                'Continuing education', 
+                'Undergraduate freshman', 
+                'Undergraduate sophomore', 
+                'Undergraduate junior', 
+                'Undergraduate senior', 
+                'Graduate 1', 
+                'Graduate 2', 
+                'Employee', 
+                'Faculty',
+            ];
             let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {
                 return "(" + $1 + ") " + $2 + "-" + $3;
             });
@@ -632,6 +648,7 @@
     };
     
     async function findPatronWebCheckout (patronid, found, notfound) {
+        console.log("TRY");
         let persons = await Requests.autocomplete.person(patronid);
         if (persons != null && persons.length == 1) { 
             found(persons[0]);
@@ -655,6 +672,7 @@
     };
 
     function searchPatron(immediate) {
+        console.log("SEARCH");
         let patron = $(this).val();
         
         clearTimeout(patronTimer);
@@ -668,14 +686,18 @@
         // if the patron we are searching is being search by number then we need to do a few things
         if (!isNaN(Number(patron)) && patron.length == 16) {
             // Historic Context for this line of code:
-            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
-            // Starting April of 2019, the uga id's only displayed the 81# in the back of it, but the barcode's still scans as 16 digits. For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
+            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. 
+            // This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
+            // Any UGA ID Printed after April of 2019, now only displays the 81# while the barcode still scans all 16.
+            // For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
             // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.
             patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#
         }
             
         patronTimer = setTimeout(async function () {
+            console.log("Find person: ", patron)
             findPatronWebCheckout(patron, function (person) {
+                console.log("SET", person.oid);
                 setWebCheckoutPatron(person.oid);
             }, async function (multipleEntries) {
                 try {
@@ -714,12 +736,14 @@
     }
 
     (function main () {
-        $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
-        $("#input-barcode, textarea[id^='rapid']").on("keydown", removePrefix);
-        
-        $("#input-patron").on("keyup", searchPatron);
-        $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
-            $("#input-patron").css("color", "black");
+        $(document).ready(function () {
+            $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
+            $("#input-barcode, textarea[id^='rapid']").on("keydown", removePrefix);
+
+            $("#input-patron").on("keyup", searchPatron);
+            $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
+                $("#input-patron").css("color", "black");
+            });
         });
     })();
     

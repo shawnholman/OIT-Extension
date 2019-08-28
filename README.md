@@ -1,12 +1,12 @@
 # OIT-Extension
 This extension serves to provide helper functionalities to our services. Specifically, it helps connect OITLogging to WebCheckout and improves the experience with OneSource by automatically logging you out.
 
-# First-time Instructions
+## First-time Instructions
 If this is the first time pulling this extension, then open up the terminal and run the following command in the extensions folder:
-
-./prepare.sh
-
-# Creating the next extension version
+```
+$ ./setup.sh
+```
+## Creating the next extension version
 In order to zip up the extension, make sure that you advance the version number in the "manifest.json" file. Then, inside of the terminal, go to the extensions folder, and run "gulp compress". This will put a zip file with the extension inside of the prod folder.
 
 ## Adding the extension to chrome
