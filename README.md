@@ -1,7 +1,7 @@
 # OIT-Extension
 This extension serves to provide helper functionalities to our services. Specifically, it helps connect OITLogging to WebCheckout and improves the experience with OneSource by automatically logging you out.
 
-# Support
+## Support
 This extension has been testing and used for Chrome and Firefox but should work in Opera and Safari likewise.
 
 ## First-time Instructions
