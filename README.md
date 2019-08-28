@@ -1,6 +1,9 @@
 # OIT-Extension
 This extension serves to provide helper functionalities to our services. Specifically, it helps connect OITLogging to WebCheckout and improves the experience with OneSource by automatically logging you out.
 
+# Support
+This extension has been testing and used for Chrome and Firefox but should work in Opera and Safari likewise.
+
 ## First-time Instructions
 If this is the first time pulling this extension, then open up the terminal and run the following command in the extensions folder:
 ```
@@ -23,3 +26,23 @@ In order to update the extension, follow the following steps for **each** comput
 3. Remove the current extension
 4. There should be a gear icon someone on the page. Clicking this will make a dropdown appear with an option to "Install Add-on From File..". Click on this and select the xpi file.
 5. Restart firefox.
+
+## Testing Locally
+In order to test the extensions, upload a local copy of the extension to your browser.  
+
+### Chrome
+1. Go to chrome://extensions/
+2. In header, select the option that says "Developer Mode". This will open up the developers options which should now be visible.
+3. Click on the button that says "Load unpacked" 
+4. Select the "extension" folder inside of OIT-Extension (OIT-Extension/extension)
+5. Click "Open"
+
+The local copy will be added and any future changes can be reflect by hitting the "Update" button. This means that you do not have to continuously add and remove the extension for testing.
+
+### Firefox
+1. Go to about:debugging
+2. Click on Load Temporary Add-on
+3. Select the manifest.json file inside of the "extension" folder (OIT-Extension/extension/manifest.json)
+4. Click "Open"
+
+The local copy will be added and any future changes can be reflect by hitting the "Reload" button. This means that you do not have to continuously add and remove the extension for testing.
