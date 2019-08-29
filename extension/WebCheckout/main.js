@@ -1,4 +1,5 @@
 (function($) {
+
     /** Detect which runtime variable to use so that this extension is compatible with chrome, firefox, opera, and safari */
     const globalRuntime = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime) ? chrome.runtime : browser.runtime;
     
@@ -12,7 +13,7 @@
     
     // patron timer in order to verify a scan
     let patronTimer;
-¬
+
     const Utility = {
         /**
          * Pulls a resource from the local extension.

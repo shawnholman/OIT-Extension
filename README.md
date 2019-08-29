@@ -5,21 +5,44 @@ This extension serves to provide helper functionalities to our services. Specifi
 This extension has been testing and used for Chrome and Firefox but should work in Opera and Safari likewise.
 
 ## First-time Instructions
-If this is the first time pulling this extension, then open up the terminal and run the following command in the extensions folder:
+The first time that you clone this repository you are going to need to setup the environment. This is an easy process as a bash script already exists for you. 
+Run the command below to setup your environments inside of the terminal. Make sure you are inside of the OIT-Extension folder.
 ```
 $ ./setup.sh
 ```
-## Creating the next extension version
-In order to zip up the extension, make sure that you advance the version number in the "manifest.json" file. Then, inside of the terminal, go to the extensions folder, and run "gulp compress". This will put a zip file with the extension inside of the prod folder.
+## Pushing the Next Version Live
+After you make changes to the extension, you will likely want to push it live to both Chrome and Firefox. This process is very easy! The first step is to advance the version number
+inside of the manifest.json file. This is very important as you can not upload duplicate version numbers. See the version numbering section below for more information.
 
-## Adding the extension to chrome
-The zip file can directly be uploaded to the chrome developers dashboard at https://chrome.google.com/webstore/developer/dashboard. Login using mediadsk. Find the OITLogging listing and click on "Edit". Find the button that says "Upload Updated Package" and use the zip file given here.
+Creating the necessary ZIP and XPI files for publishing the extension has been automated by a bash script. In order to create these files, run the script below from the OIT-Extension folder.
+```
+$ ./compress_extension.sh
+```
+This will generate two files:
+1. oitlogging-${version}.zip
+2. oitloggin-${version}.xpi
 
-## Adding the extension to firefox
-Firefox does not allow our extension to be on their store so we are self-distributing the extension. Firefox extensions have to be signed by Mozilla. This is done at https://addons.mozilla.org/en-US/firefox/. Sign in using mediadsk and
-then go to the "Developer Hub".  Click on "Product Page" and find "Upload New Version" on the side. You will upload the zip file there and receive an xpi file back from them. Put this file in the "firefox" folder on this extension and push an update to git that way all the other computers can have a copy of the xpi file.
+where ${version} is replaced with the version number that is inside of the manifest.json file. The zip file will be used for Chrome, while the xpi file will be used by Firefox.
 
-In order to update the extension, follow the following steps for **each** computer:
+### Pushing to Chrome
+1. Go to https://chrome.google.com/webstore/developer/dashboard. 
+2. Login using mediadsk. 
+3. Find the OITLogging listing and click on "Edit". 
+4. Find the button that says "Upload Updated Package" 
+5. Upload the **zip** file here.
+
+The chrome extension should be pushed to each computer automatically after some time. If you do not want to wait for this to happen you can follow the steps below
+to update manually.
+
+1. Go to chrome://extensions
+2. Click on Developer mode in the header bar
+3. A bar should appear with an option to "Update"
+4. Click on that.
+5. Verify that the version is correct by clicking on "Details" by your extension.
+
+### Pushing to Firefox
+Firefox does not allow our extension to be on their store so we are self-distributing the extension. The steps below will need to be done
+on every computer that you want to update as there is no way of pushing this to every computer.
 
 1. Go to about:addons on firefox
 2. Click on the extensions tab on the sidebar
@@ -46,3 +69,19 @@ The local copy will be added and any future changes can be reflect by hitting th
 4. Click "Open"
 
 The local copy will be added and any future changes can be reflect by hitting the "Reload" button. This means that you do not have to continuously add and remove the extension for testing.
+
+## Version Numbering
+This extension uses a three tier versioning system. Our versions look like: MAJOR.MINOR.BUGFIX (e.g., 1.3.0)
+
+The meaning of each number are in the following order: Major Revision, Minor Revision, Bug Fix. 
+The type of change(s) that you make to the code base will determine which number to advance. Advancing a major revision version number
+resets the minor and bugfix to '0'. Advancing a minor revision number will reset the bugfix to '0'.
+
+A logical version progression would look as follows.
+```
+1.0.0 => 1.0.1 => 1.1.0 => 1.2.0 => 1.2.1 => 1.2.2 => 1.3.0 => 2.0.0 => 2.0.1
+```
+### Major vs Minor Revision vs Bug Fix
+A major revision is one that adds/removes a lot of features or rewrites a large part of the code base. A minor revision
+deals with small changes to the code base, one added feature, or a collection of bug fixes. A bug fix deals with just a single
+bug being fixed. 

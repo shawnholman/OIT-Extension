@@ -13,6 +13,6 @@
    "manifest_version": 2,
    "name": "OITLogging",
    "permissions": ["https://webcheckout2.coe.uga.edu/webcheckout/wco/", "https://coeoit.coe.uga.edu:47715/"],
-   "version": "1.0.4.6",
+   "version": "1.0.5",
    "web_accessible_resources": [ "*" ]
 }
