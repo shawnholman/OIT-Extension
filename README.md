@@ -74,14 +74,17 @@ The local copy will be added and any future changes can be reflect by hitting th
 This extension uses a three tier versioning system. Our versions look like: MAJOR.MINOR.BUGFIX (e.g., 1.3.0)
 
 The meaning of each number are in the following order: Major Revision, Minor Revision, Bug Fix. 
-The type of change(s) that you make to the code base will determine which number to advance. Advancing a major revision version number
-resets the minor and bugfix to '0'. Advancing a minor revision number will reset the bugfix to '0'.
+The type of change(s) that you make to the code base will determine which number to advance. Advancing the major revision number
+will reset both the minor revision number and bug fix version number to '0'. 
+Advancing the minor revision number will reset only the bug fix version to '0'.
 
 A logical version progression would look as follows.
 ```
 1.0.0 => 1.0.1 => 1.1.0 => 1.2.0 => 1.2.1 => 1.2.2 => 1.3.0 => 2.0.0 => 2.0.1
 ```
-### Major vs Minor Revision vs Bug Fix
+### Major vs Minor vs Bug Fix
+Determining which version number to advance should be determined based on the definitions below.
+
 A major revision is one that adds/removes a lot of features or rewrites a large part of the code base. A minor revision
 deals with small changes to the code base, one added feature, or a collection of bug fixes. A bug fix deals with just a single
 bug being fixed. 
