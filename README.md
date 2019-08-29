@@ -86,5 +86,5 @@ A logical version progression would look as follows.
 Determining which version number to advance should be determined based on the definitions below.
 
 A major revision is one that adds/removes a lot of features or rewrites a large part of the code base. A minor revision
-deals with small changes to the code base, one added feature, or a collection of bug fixes. A bug fix deals with just a single
+deals with small changes to the code base, one added feature, or a collection of bug fixes. A bug fix revision deals with just a single
 bug being fixed. 
