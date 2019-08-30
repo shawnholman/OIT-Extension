@@ -33,6 +33,8 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
     mv ./extension/web-ext-artifacts/oitlogging-$CURRENT_EXTENSION_VERSION-an+fx.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     cp ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     rm -rf ./extension/web-ext-artifacts 
+    
+    cat ./extension/.web-extension-id
     rm ./extension/.web-extension-id
     
     echo "Updated git"
