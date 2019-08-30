@@ -31,8 +31,15 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
 
     cd ..
     mv ./extension/web-ext-artifacts/oitlogging-$CURRENT_EXTENSION_VERSION-an+fx.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
+    cp ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     rm -rf ./extension/web-ext-artifacts 
     rm ./extension/.web-extension-id
+    
+    echo "Updated git"
+    git add ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
+    git commit -am "Upgraded to version $CURRENT_EXTENSION_VERSION"
+    git push
+    echo "SUCCESS"
 else 
     echo "XPI File for version $CURRENT_EXTENSION_VERSION already exists."
 fi
