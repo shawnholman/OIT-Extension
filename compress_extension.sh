@@ -16,7 +16,8 @@ fi
 # Create the necessary zip file for Chrome if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]; then
     echo "Creating ZIP file for Chrome extension.."
-    zip -rq ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip extension
+    zip -r ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip extension
+    git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
     echo "SUCCESS"
 else
     echo "ZIP File for version $CURRENT_EXTENSION_VERSION already exists."
@@ -33,16 +34,18 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
 
     cd ..
     mv ./extension/web-ext-artifacts/oitlogging-$CURRENT_EXTENSION_VERSION-an+fx.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
-    cp -r ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     rm -rf ./extension/web-ext-artifacts 
     
     rm ./extension/.web-extension-id
     
     echo "Updated git"
     git add ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
-    git commit -am "Upgraded to version $CURRENT_EXTENSION_VERSION"
-    git push
     echo "SUCCESS"
 else 
     echo "XPI File for version $CURRENT_EXTENSION_VERSION already exists."
+fi
+
+if [[ ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
+     git commit -am "Upgraded to version $CURRENT_EXTENSION_VERSION"
+     git push
 fi
