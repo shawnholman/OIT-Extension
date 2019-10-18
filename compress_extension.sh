@@ -39,7 +39,7 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
     rm ./extension/.web-extension-id
     
     echo "Updated git"
-    git add ./firefox/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
+    git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     echo "SUCCESS"
 else 
     echo "XPI File for version $CURRENT_EXTENSION_VERSION already exists."
