@@ -20,7 +20,7 @@ $ ./compress_extension.sh
 ```
 This will generate two files:
 1. oitlogging-${version}.zip
-2. oitloggin-${version}.xpi
+2. oitlogging-${version}.xpi
 
 where ${version} is replaced with the version number that is inside of the manifest.json file. The zip file will be used for Chrome, while the xpi file will be used by Firefox.
 

@@ -3,7 +3,7 @@ CURRENT_EXTENSION_VERSION=$(cat ./extension/manifest.json | python -c 'import js
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-rm ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
+#rm ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
 
 # Check to see if both files already exist. Chances are, this means that the developer has not updated the verson inside the manifest
 if [[ -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
