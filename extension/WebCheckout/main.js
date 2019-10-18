@@ -1,10 +1,12 @@
 (function($) {
 
     /** Detect which runtime variable to use so that this extension is compatible with chrome, firefox, opera, and safari */
-    const globalRuntime = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime) ? chrome.runtime : browser.runtime;
+    const isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+    const globalRuntime = isChrome ? chrome.runtime : browser.runtime;
     
     /**
-     * The host of the webcheckout system. Needed for firefox due to https://github.com/greasemonkey/greasemonkey/issues/2680
+     * The host of the webcheckout system. Needed for firefox due to
+     * https://github.com/greasemonkey/greasemonkey/issues/2680
      */
     const host = "https://webcheckout2.coe.uga.edu";
     
@@ -14,6 +16,7 @@
     // patron timer in order to verify a scan
     let patronTimer;
 
+    /** Utilities */
     const Utility = {
         /**
          * Pulls a resource from the local extension.
@@ -116,8 +119,9 @@
      *          feed (Function): a function that has its first parameter set to the results of the current frame. This allows you to further process the results of a frame (see addResources for an example)
      *          other (Object): any $.ajax properties that you would like to include in this request.
      *              In order to override being limited to a post request, you must include: other: { method: 'YOUR_DESIRED_METHOD_HERE'}
+     *          stop (Function): Allows you to stop a frame requrest given a certain condition. Return false to continue otherwise return an error message
      *
-     *      The only required property is url
+     *      The only required property is url. Any other parameter is added to the frame request and can be accessed inside of the progress method.
      *
      * @return {Promise}
      *
@@ -142,7 +146,7 @@
      *              other: {
      *                  method: "GET" // this overrides the nature of using a post request which is the default
      *              }
-     *              stop: true // we can access this inside of the progress function when we get to this particular frame
+     *              skip: true // we can access this inside of the progress function when we get to this particular frame
      *          }
      *      ]);
      *      request.progress(function (progressData, currentFrame) {
@@ -152,7 +156,7 @@
      *          console.log("Remaining: ", progressData.remaining, "s");
      *
      *          // Note current frame equals the object defined within the makeFrameRequest array
-     *          if (currentFrame.hasOwnProperty('stop') && currentFrame.stop == true) {
+     *          if (currentFrame.hasOwnProperty('skip') && currentFrame.skip == true) {
      *              request.cancel();
      *          }
      *      });
@@ -167,13 +171,14 @@
 
         let startTime = performance.now();
         let promise = new Promise(function(resolve, reject) {
-            let frame = frames[0]; // get the first frame
             if (frames.length == 0) { // resolve when all frames have been used
                 resolve();
             } else {
-                let additionalData = frame.other == undefined || frame.other == null ? {} : frame.other;
-                let feeder = frame.feed == undefined || frame.feed == null ? $.noop : frame.feed;
-                let conditional = frame.stop == undefined || frame.stop == null ? (function () {return false;}) : frame.stop;
+                let frame = frames[0]; // get the first frame
+                let additionalData = frame.other || {};
+                let feeder = frame.feed || $.noop;
+                let conditional = frame.stop || (function () {return false;});
+                
                 return $.ajax({
                     method: 'POST',
                     url: frame.url,
@@ -187,8 +192,9 @@
                         frames.shift(); // shift the frames
 
                         // if the user has cancelled and we aren't on the last frame
-                        if (cancelled && frames.length != 0) reject('cancelled');
-                        else { // else continue making frame requests
+                        if (cancelled && frames.length != 0) {
+                            reject('cancelled');
+                        } else { // else continue making frame requests
                             if (progress != null && typeof progress == "function") {
                                 let progressData = { // set progress data
                                     completed: framesCompleted + 1,
@@ -202,7 +208,9 @@
 
                             //push the execution time for the purpose of generating an average
                             globalTimes.push(performance.now() - startTime);
-                            return makeFrameRequest(frames).then(resolve, reject).progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests
+                            return makeFrameRequest(frames)
+                                .then(resolve, reject)
+                                .progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests
                         }
                     } else {
                         reject(conditionalMessage);
@@ -213,6 +221,7 @@
                 });
             }
         });
+        
         Promise.prototype.progress = function (progressFunction, total, completed, times) { // keep track of progress
             totalFrames = total || frames.length;
             framesCompleted = completed || 0;
@@ -220,6 +229,7 @@
             globalTimes = times || [];
             avgTime = Utility.average(times);
         };
+        
         Promise.prototype.cancel = function () {
             cancelled = true;
             $.post('?method=checkout-jump');
@@ -229,23 +239,26 @@
     }
 
 
-    // holds different types of requests that we will be pulling
+    /** Holds different requests that can be made. */
     let Requests = {
         /**
          * All of these requests should be done here through the COE OIT System
          */
-        COEOITAPI: {
+        CoeOitApi: {
             findUser: function (userid) {
                 //userid = "6235678118879000";
                 return  new Promise(function (resolve, reject) {
                     $.ajax({
                         url: "https://coeoit.coe.uga.edu:47715/api/v1/webcheckout/user/" + userid,
                         type: "GET",
+                        crossDomain: true,
                         success: function (person) {
                             resolve(person);
                         },
                         error: function (err) {
-                            reject("User does not exist in either systems.");
+                            const errorMsg = isChrome ? "User does not exist in either systems." :
+                                                "Adding Users is Temporarily Disabled on Firefox";
+                            reject(errorMsg);
                         }
                     });
                 });
@@ -270,11 +283,16 @@
                     stop: function (resp) {
                         let foundBar = resp.match(/NOTIFICATION-BAR="" STUFFED-NOTIFICATIONS\="(.*)"/);
                         
+                        // At this point, if there is something wrong with adding the user, an error bar will be
+                        // added to the page. The error bar has a parameter in the HTML called "STUFFED-NOTIFICATIONS"
+                        // which contains a status message in the form on JSON. We will get that JSON, parse it, and
+                        // see if an error has occured. If an error has occured, we will return that message which 
+                        // can then be picked up in the error function parameter of the promise.
                         if (foundBar) {
                             try {
                                 let message = foundBar[1].replace(/\&quot\;/g, '"');
                                 let parsedMessage = JSON.parse(message)[0];
-                                console.log(parsedMessage, "mess")
+                                
                                 if (parsedMessage.type == "error") {
                                     return parsedMessage.message;
                                 }
@@ -346,8 +364,6 @@
             },
             person: function (id) {
                 return new Promise (function (resolve, reject) {
-                    console.log("Find person ajax");
-                    console.log(`{"string": "${id}", "limit": 30}`);
                     $.ajax({
                         url: host + '/webcheckout/rest/person/Autocomplete',
                         type: "POST",
@@ -361,7 +377,6 @@
                             withCredentials: true
                         },
                         success: function (d) {
-                            console.log("RESPONE", d)
                             if (d == null || d.payload == null) resolve([]);
                             else {
                                 for (let payload of d.payload) {
@@ -457,7 +472,7 @@
         }
     }
 
-    async function modifiedResourceAdder () {
+    async function openResourceAdder () {
         let inputRow = await Utility.pullResource('WebCheckout/html/newResource/inputRow.html', {}, true);
 
         Utility.pullResource('WebCheckout/html/newResource/newResource.html', { inputRow }, true).then(function (content) {
@@ -649,12 +664,10 @@
     };
     
     async function findPatronWebCheckout (patronid, found, notfound) {
-        console.log("TRY");
         let persons = await Requests.autocomplete.person(patronid);
         if (persons != null && persons.length == 1) { 
             found(persons[0]);
         } else {
-            console.log(persons);
             let multipleEntries = persons != null ? persons.length > 1 : false;
             notfound(multipleEntries);
         }
@@ -673,7 +686,6 @@
     };
 
     function searchPatron(immediate) {
-        console.log("SEARCH");
         let patron = $(this).val();
         
         clearTimeout(patronTimer);
@@ -696,9 +708,7 @@
         }
             
         patronTimer = setTimeout(async function () {
-            console.log("Find person: ", patron)
             findPatronWebCheckout(patron, function (person) {
-                console.log("SET", person.oid);
                 setWebCheckoutPatron(person.oid);
             }, async function (multipleEntries) {
                 try {
@@ -706,7 +716,7 @@
                         throw "Unique identity was unable to be found";
                     }
                         
-                    let oitperson = await Requests.COEOITAPI.findUser(patron);
+                    let oitperson = await Requests.CoeOitApi.findUser(patron);
                     let parsedPerson = Utility.parseToDataString(oitperson.wcoCode);
                     
                     $("#input-patron").css("color", "black");
@@ -738,7 +748,7 @@
 
     (function main () {
         $(document).ready(function () {
-            $('#new-resource-wizard').removeAttr('href').on('click', modifiedResourceAdder);
+            $('#new-resource-wizard').removeAttr('href').on('click', openResourceAdder);
             $("#input-barcode, textarea[id^='rapid']").on("keydown", removePrefix);
 
             $("#input-patron").on("keyup", searchPatron);
@@ -746,11 +756,11 @@
                 $("#input-patron").css("color", "black");
             });
         });
+        
+        //Append your inject.js to "real" webpage. So will it can full access to webpate.
+        let s = document.createElement('script');
+        s.src = chrome.extension.getURL('WebCheckout/inject.js');
+        (document.head || document.documentElement).appendChild(s);
     })();
-    
-    //Append your inject.js to "real" webpage. So will it can full access to webpate.
-    var s = document.createElement('script');
-    s.src = chrome.extension.getURL('WebCheckout/inject.js');
-    (document.head || document.documentElement).appendChild(s);
 
 })(jQuery);

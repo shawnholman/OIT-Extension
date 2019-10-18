@@ -12,7 +12,12 @@
    "description": "This extension was built to modify OIT Systems that we do not have direct access to.",
    "manifest_version": 2,
    "name": "OITLogging",
-   "permissions": ["https://webcheckout2.coe.uga.edu/webcheckout/wco/", "https://coeoit.coe.uga.edu:47715/"],
+   "permissions": ["https://webcheckout2.coe.uga.edu/webcheckout/wco/", "https://coeoit.coe.uga.edu:47715/*"],
    "version": "1.0.5",
-   "web_accessible_resources": [ "*" ]
+   "web_accessible_resources": [ "*" ],
+    "applications": {
+      "gecko": {
+        "id": "oitloggin@uga.edu"
+      }
+    }
 }
