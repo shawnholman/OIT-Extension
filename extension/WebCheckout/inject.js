@@ -30,7 +30,18 @@ setTimeout(function() {
                     to: moment(returnDate)
                 });
             }
-        }    
+        },
+        
+        /** Run a task multiple times in order to ensure its completion without a callback */
+        timeoutTimes: function (func, timers) {
+            if (timers.length == 0) return;
+            let time = timers.shift();
+            setTimeout(function () {
+                if(func() != true) {
+                    Utility.timeoutTimes(func, timers);
+                }
+            }, time);
+        }
     }
     
     /** Called once the document is ready */
@@ -86,11 +97,22 @@ setTimeout(function() {
             t.soundBeep()) : t.showTemporaryMessage("Multiple resources match the ID or barcode '" + $("input#input-barcode", t.wrapper).val() + "'; Use the 'Find Resources' screen instead.", "error"),
             $("input#input-barcode", t.wrapper).val(""));
             
-            // If the resource is an edtpa kit
-            if (resources.length > 0 && resources[0].description && resources[0].description.toLowerCase().includes("edtpa")) {
-                // Then, we need to extend the date by two weeks.
-                Utility.extendDate(2);
-            }
+            /** 
+             * Because we can not guarentee the time that it will take for the "add-resource" request,
+             * we are using time timeout times method to make multiple timeouts happen until either an
+             * edtpa kit is detected or nothing happens and all of the timers runout.
+             */
+            Utility.timeoutTimes(() => {
+                let currentResources = document.querySelectorAll('.resources-selected-list .selected-resource-item');
+                for (let resource of currentResources) {
+                    let resourceText = resource.textContent.toLowerCase();
+                    if (resourceText.includes("edtpa") && resourceText.includes("kit")) {
+                        // Then, we need to extend the date by two weeks.
+                        Utility.extendDate(2);
+                        return true;
+                    }
+                }
+            }, [50, 50, 50, 50, 100, 150, 200, 250]);
         }
     }
     
