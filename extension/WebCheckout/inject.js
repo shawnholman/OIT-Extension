@@ -87,7 +87,7 @@ setTimeout(function() {
             $("input#input-barcode", t.wrapper).val(""));
             
             // If the resource is an edtpa kit
-            if (resources.length > 0 && resources[0].description.toLowerCase().includes("edtpa")) {
+            if (resources.length > 0 && resources[0].description && resources[0].description.toLowerCase().includes("edtpa")) {
                 // Then, we need to extend the date by two weeks.
                 Utility.extendDate(2);
             }
