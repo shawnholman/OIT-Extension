@@ -4,8 +4,8 @@
       "matches": [ "https://selfservice.hprod.onehcm.usg.edu/psp/hprodsssso/HCMSS/HRMS/c/ROLE_EMPLOYEE.TL_WEB_CLOCK.GBL?Page=TL_WEB_CLOCK&Action=U" ],
       "run_at": "document_end"
    }, {
-      "css": [ "WebCheckout/featherlight.css", "WebCheckout/main.css" ],
-      "js": [ "WebCheckout/jquery.js", "WebCheckout/featherlight.js", "WebCheckout/main.js" ],
+      "css": [ "WebCheckout/css/featherlight.css", "WebCheckout/css/main.css" ],
+      "js": [ "WebCheckout/lib/jquery.js", "WebCheckout/lib/featherlight.js", "WebCheckout/lib/keymaster.js", "WebCheckout/main.build.js" ],
       "matches": [ "https://webcheckout2.coe.uga.edu/webcheckout/wco*" ],
       "run_at": "document_end"
    } ],

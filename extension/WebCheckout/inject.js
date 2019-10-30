@@ -42,7 +42,7 @@ setTimeout(function() {
                 }
             }, time);
         }
-    }
+    };
     
     /** Called once the document is ready */
     const ready = function () {
@@ -70,7 +70,7 @@ setTimeout(function() {
     //  - What changes are you making? 
     //  - Why are you making these changes? 
     //  - What modifications did you have to make
-    if (WCOForm) {
+    if (typeof WCOForm !== "undefined") {
         /**
          * Overrides the _addBarcodeResource method. 
          * 

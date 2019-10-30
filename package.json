@@ -7,7 +7,9 @@
     "gulp": "^4.0.0",
     "gulp-zip": "^4.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "webpack-stream": "^5.2.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

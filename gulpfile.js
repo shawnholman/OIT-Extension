@@ -1,10 +1,8 @@
 const gulp = require('gulp');
-const zip = require('gulp-zip');
-var fs = require('fs');
+const webpack_stream = require('webpack-stream')
+const webpack_config = require('./webpack.config.js');
 
-gulp.task('compress', () => {
-    var { version } = JSON.parse(fs.readFileSync('./extension/manifest.json'));         
-    return gulp.src('extension/**')
-        .pipe(zip(`extension-${version}.zip`))
-        .pipe(gulp.dest('prod'))
+gulp.task('webpack', function() {
+  return webpack_stream(webpack_config)
+        .pipe(gulp.dest(`extension/WebCheckout/`));
 });
