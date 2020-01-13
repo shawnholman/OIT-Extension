@@ -5,6 +5,8 @@ This extension serves to provide helper functionalities to our services. Specifi
 This extension has been testing and used for Chrome and Firefox but should work in Opera and Safari likewise.
 
 ## First-time Instructions
+Before you clone this repository, make sure that the computer that you intend to clone the repository is has an SSH Key associated with the account. Go ahead and set this up if you sure that you do not have this setup or if you are unsure if it already is or not. You can find instructions below under the section called "SSH Authentication".
+
 The first time that you clone this repository you are going to need to setup the environment. This is an easy process as a bash script already exists for you. 
 Run the command below to setup your environments inside of the terminal. Make sure you are inside of the OIT-Extension folder.
 ```
@@ -88,3 +90,24 @@ Determining which version number to advance should be determined based on the de
 A major revision is one that adds/removes a lot of features or rewrites a large part of the code base. A minor revision
 deals with small changes to the code base, one added feature, or a collection of bug fixes. A bug fix revision deals with just a single
 bug being fixed. 
+
+
+### SSH Authentication
+Setting up SSH Authentication comes in two parts. Part one requires that you create a key on the computer that you want to access the repository from and the second step requires you to associate this key with your account.
+
+Step 1: Create key
+1. Open up terminal on your computer.
+2. Run "cd ~" to make sure you are in the correct directory
+3. Run "ssh-keygen -t rsa" to begin ssh key generation.
+    i. You will be asked what location to store the key. Press ENTER to accept the default location.
+    ii. You will be asked for a secret key. This is your password to this repository and any future repositories that you want to use from this computer. *NOTE: If you have never entered passwords into a terminal before, you will notice that it does not show what you are actually typing for security purposes so be carful when entering in the password.*
+    iii. You will be asked to confirm your key.
+4. Run "pbcopy < ~/.ssh/id_rsa.pub" to copy the generate key into your clipboard.
+
+Step 2: Add key to github
+1. Login into github on mediadsk
+2. Go to Account Settings (NOT repository settings)
+3. Inside Account Settings go to "SSH and GPG Keys"
+4. Add a new key, give it a name, and paste the key that you go from running the "pbcopy" command in step 1.4
+
+The next step will be adding the key into

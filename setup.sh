@@ -2,26 +2,10 @@
 
 # Install Node Version Manager
 echo "Installing Node Version Manager (NVM)"
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
-
-# Node Version Manager Environment Scripts for Bashrc
-NVM_SETUP="export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This load\
-s nvm bash_completion"
-
-# Check to see if the bashrc file has the NVM_SETUP script already
-echo "Chaecking NVM setup"l
-if grep -Fxq "$NVM_SETUP" ~/.bashrc
-then
-    # If so, do nothing
-    echo "NVM already setup"
-else
-    # Make the above bash script availiable to the current shell session
-    echo "$NVM_SETUP" >> ~/.bashrc
-    source ~/.bashrc
-    echo "NVM setup complete"
-fi
+touch ~/.bash_profile
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+source ~/.bashrc
+echo "Bashrc sourced"
 
 # Install the latest version of node
 echo "Installing node"
