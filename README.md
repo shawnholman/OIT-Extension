@@ -99,9 +99,9 @@ Step 1: Create key
 1. Open up terminal on your computer.
 2. Run "cd ~" to make sure you are in the correct directory
 3. Run "ssh-keygen -t rsa" to begin ssh key generation.
-    i. You will be asked what location to store the key. Press ENTER to accept the default location.
-    ii. You will be asked for a secret key. This is your password to this repository and any future repositories that you want to use from this computer. *NOTE: If you have never entered passwords into a terminal before, you will notice that it does not show what you are actually typing for security purposes so be carful when entering in the password.*
-    iii. You will be asked to confirm your key.
+    - You will be asked what location to store the key. Press ENTER to accept the default location.
+    - You will be asked for a secret key. This is your password to this repository and any future repositories that you want to use from this computer. **NOTE: If you have never entered passwords into a terminal before, you will notice that it does not show what you are actually typing for security purposes so be carful when entering in the password.**
+    - You will be asked to confirm your key.
 4. Run "pbcopy < ~/.ssh/id_rsa.pub" to copy the generate key into your clipboard.
 
 Step 2: Add key to github
