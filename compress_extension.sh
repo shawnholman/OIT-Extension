@@ -16,7 +16,7 @@ fi
 # Create the necessary zip file for Chrome if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]; then
     echo "Creating ZIP file for Chrome extension.."
-    zip -rq ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip extension
+    zip -rq ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip extension/*
     git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
     echo "SUCCESS"
 else
@@ -28,8 +28,8 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
     echo "Creating XPI file for Firefox extension.."
     cd extension 
 
-    AMO_JWT_ISSUER="user:14651378:248"
-    AMO_JWT_SECRET="0df6cb3711c7616291583b0cfb90bc0a9e81eafa01fb6df6738970ae2957b89f"
+    AMO_JWT_ISSUER="user:14651378:752"
+    AMO_JWT_SECRET="0e5b4e0849bc44068a1962b81642ef281341d59e245f7088e528f738ac1cf6f4"
     web-ext sign --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET 
 
     cd ..
