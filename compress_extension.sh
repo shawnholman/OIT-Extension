@@ -16,7 +16,8 @@ fi
 # Create the necessary zip file for Chrome if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]; then
     echo "Creating ZIP file for Chrome extension.."
-    zip -rq ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip extension/*
+    cd extension; zip -rq ../prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip *
+    cd ..
     git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
     echo "SUCCESS"
 else

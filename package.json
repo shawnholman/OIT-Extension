@@ -9,6 +9,7 @@
     "web-ext": "^4.0.0"
   },
   "devDependencies": {
+    "webpack-cli": "^3.3.11",
     "webpack-stream": "^5.2.1"
   },
   "scripts": {
