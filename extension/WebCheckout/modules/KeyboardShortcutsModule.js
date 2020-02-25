@@ -32,26 +32,26 @@ export class KeyboardShortcutsModule {
      */
     _key(keys, event) {
         const prefix = this.keyPrefix || "";
-        let key;
+        let keyPressed;
         
         if (Array.isArray(keys)) {
             let combos = keys.reduce((accum, curr) => {
                     return accum + prefix + curr + ","; 
             }, "").slice(0, -1);
             
-            key = keys[0];
+            keyPressed = keys[0];
             key(combos, event.func);
         } else if (typeof keys === "string") {
-            key = keys;
-            key(prefix + key, event.func);
+            keyPressed = keys;
+            key(prefix + keyPressed, event.func);
         }
         
         // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.
         // For example, command+shirt+A would turn into ⌘+⇧+A
-        let shortcutName = (prefix + key).replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), function (m) {
+        let shortcutName = (prefix + keyPressed).replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
             return this.keyToSymbol[m];
         });
-        activeKeyList[shortcutName] = event.label;
+        this.activeKeyList[shortcutName] = event.label;
     }
 
     _createMeta(label, func) {
@@ -62,7 +62,7 @@ export class KeyboardShortcutsModule {
      * @param href Link to go to
      */
     _goTo(href, label) {
-        return this._createMeta(label, () => {
+        return this._createMeta("Go to " + label, () => {
             window.location.href = href;
         });
     }
@@ -77,16 +77,16 @@ export class KeyboardShortcutsModule {
         if (dynamic == undefined || dynamic == false) {
             let el = $(element);
             if (el.length == 1) {
-                return this.createMeta(label, () => el[0].click());
+                return this._createMeta(label, () => el[0].click());
             } else {
                 if (el.length > 1) {
                     throw new Error("Can not identify a unique clickable element.");
                 }
-                return this.createMeta(label, () => {});
+                return this._createMeta(label, () => {});
             }
         }
         
-        return this.createMeta(label, () => {
+        return this._createMeta(label, () => {
             let el = $(element);
             if (el.length == 1) {
                el[0].click(); 
@@ -135,10 +135,11 @@ export class KeyboardShortcutsModule {
         /**<div class="rightSessionContent"><div class="rightSessionName">
     Keyboard Shortcuts: ⌘⇧R - Go to Checkout
 </div></div>*/
-        localStorage.setItem("list", JSON.stringify(this.activeKeyList));
-        $("#statusBar .rightStatusBar").append("SOMETHING NEW");
         this._removeFilter();
         this._installRedirects();
         this._installClicks();
+        
+        localStorage.setItem("list", JSON.stringify(this.activeKeyList));
+        //$("#statusbar .rightStatusBar").append("SOMETHING NEWISH!!");
     }
 }

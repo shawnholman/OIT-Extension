@@ -16,6 +16,8 @@ $ ./setup.sh
 After you make changes to the extension, you will likely want to push it live to both Chrome and Firefox. This process is very easy! The first step is to advance the version number
 inside of the manifest.json file. This is very important as you can not upload duplicate version numbers. See the version numbering section below for more information.
 
+Next, you will need to pack the extension. In the terminal, call "webpack".
+
 Creating the necessary ZIP and XPI files for publishing the extension has been automated by a bash script. In order to create these files, run the script below from the OIT-Extension folder.
 ```
 $ ./compress_extension.sh
