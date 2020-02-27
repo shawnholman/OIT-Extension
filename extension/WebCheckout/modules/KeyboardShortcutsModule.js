@@ -1,3 +1,5 @@
+import {Utility} from '../util.js';
+
 /**
  * The ShortCutModule implements several useful shortcuts to be used across WebCheckout
  */
@@ -31,6 +33,10 @@ export class KeyboardShortcutsModule {
      * for an example.
      */
     _key(keys, event) {
+        if (event == false) {
+            return;
+        }
+        
         const prefix = this.keyPrefix || "";
         let keyPressed;
         
@@ -48,9 +54,9 @@ export class KeyboardShortcutsModule {
         
         // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.
         // For example, command+shirt+A would turn into ⌘+⇧+A
-        let shortcutName = (prefix + keyPressed).replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
+        let shortcutName = (prefix + keyPressed);/*.replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
             return this.keyToSymbol[m];
-        });
+        });*/
         this.activeKeyList[shortcutName] = event.label;
     }
 
@@ -82,7 +88,7 @@ export class KeyboardShortcutsModule {
                 if (el.length > 1) {
                     throw new Error("Can not identify a unique clickable element.");
                 }
-                return this._createMeta(label, () => {});
+                return false;
             }
         }
         
@@ -120,26 +126,40 @@ export class KeyboardShortcutsModule {
     }
     
     _installClicks() {
-        this._setPrefix("ctrl");
-        // Commit Button
-        this._key("c", this._clickOn("#commit-button .submit-all", "Checkout")) 
+        this._setPrefix("ctrl+option");
         // Confirm Checkout Button
         this._key("c", this._clickOn("button:contains('Confirm Checkout')", "Confirm Checkout", true));
+        
+        this._setPrefix("ctrl");
+        // Commit Button
+        this._key("c", this._clickOn("#commit-button .submit-all", "Checkout")); 
         // Timeline Scheduler Button (aka. Back to Checkout Button)
         this._key(["t", "b"], this._clickOn("button:contains('Timeline Scheduler')", "Back to Checkout", true));
         // Confirm Checkout Button
-        this._key("r", this._clickOn("button:contains('Reset')", "Reset Checkout"));
+        this._key("r", this._clickOn("a:contains('Reset')", "Reset Checkout"));
+    }
+    
+    _openShortCutMenu() {
+        let shortcuts = "";
+        
+        for (let shortcut in this.activeKeyList) {
+            shortcuts += "<pre style='border-radius: 0;margin: 0;border: none;background: white;padding: 5px 20px;'>" + shortcut +  "<span style='float:right'>" + this.activeKeyList[shortcut] + "</span></pre>";
+        }
+        
+        Utility.pullResource('WebCheckout/templates/keyboard_shortcuts/index.html', { shortcuts }, true).then(function (content) {
+            Utility.openLightBox(content, function () {});
+        });
     }
     
     install() {
-        /**<div class="rightSessionContent"><div class="rightSessionName">
-    Keyboard Shortcuts: ⌘⇧R - Go to Checkout
-</div></div>*/
         this._removeFilter();
         this._installRedirects();
         this._installClicks();
         
         localStorage.setItem("list", JSON.stringify(this.activeKeyList));
-        //$("#statusbar .rightStatusBar").append("SOMETHING NEWISH!!");
+        $("#statusbar .rightStatusBar").append(`<div class="rightSessionContent" style="margin-right: 15px;"><button class="button" id="openShortcuts">Shortcuts</button></div>`);
+        $("#openShortcuts").on('click', () => {
+            this._openShortCutMenu();
+        })
     }
 }

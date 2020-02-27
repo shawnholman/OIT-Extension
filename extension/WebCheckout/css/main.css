@@ -126,3 +126,17 @@
 .featherlight-inner .well.person-verification .list-group-item strong {
     float:right;
 }
+
+button.button {
+    background-color: white;
+    border: 1px solid #cacaca;
+    border-radius: 3px;
+    padding: 5px 12px;
+    outline: none;
+    transition: background-color 0.2s;
+    font-weight: bold;
+}
+
+button.button:hover {
+    background-color: #f0f0f0;
+}

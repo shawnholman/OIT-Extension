@@ -166,6 +166,7 @@ export const Utility = {
                 let additionalData = frame.other || {};
                 let feeder = frame.feed || $.noop;
                 let conditional = frame.stop || (function () {return false;});
+                let conditionalMessage = null;
                 
                 return $.ajax({
                     method: 'POST',
