@@ -1,18 +1,27 @@
 .featherlight-inner h1 {
     font-size: 20px;
-    padding: 5px 10px;
+    padding: 10px 10px;
     margin: 0;
     background: transparent;
     color: #b93b40;
     text-align: center;
-    font-weight: bold;
-    margin-top: -22px;
+    font-weight: 100;
+    background: #f7f7f7;
+    border-bottom: 2px solid #f1f1f1;
     letter-spacing: -1px;
 }
 
 .featherlight-inner .content {
-    padding: 10px 25px;
-    background: #f6f6f6;
+    max-width: 500px;
+}
+
+.featherlight-inner .content.scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.featherlight-inner .content.padding {
+    padding: 10px;
 }
 
 .featherlight-inner .content textarea, div#progress-prompt {
@@ -90,12 +99,12 @@
     user-select: none;
 }
 
-.featherlight-inner .row {
-    margin: 0 !important;
+.content .row {
+    margin: 0 0 3px 0;
 }
 
-.content .row {
-    margin-bottom: 5px;
+.content .row input[type='text'] {
+    height: 29px;
 }
 
 .content .row .remove-row {
@@ -104,7 +113,8 @@
     color: #ffeaea;
     border-radius: 4px;
     border: 1px solid #750000;
-    padding: 3px;
+    padding: 6px;
+    font-weight: bold;
 }
 
 .content .row .remove-row:hover {
@@ -119,11 +129,11 @@
     outline:none;
 }
 
-.featherlight-inner .well.person-verification, .featherlight-inner .well.person-verification ul {
+.featherlight-inner .person-verification, .featherlight-inner .person-verification ul {
     margin:0;
 }
 
-.featherlight-inner .well.person-verification .list-group-item strong {
+.featherlight-inner .person-verification .list-group-item strong {
     float:right;
 }
 
@@ -139,4 +149,14 @@ button.button {
 
 button.button:hover {
     background-color: #f0f0f0;
+}
+
+@keyframes flash {
+    0% { background: transparent; }
+    50% { background: #ffa7a7; }
+    100% { background: transparent; }
+}
+
+.flash {
+    animation: flash 2s ease-out infinite;
 }

@@ -11,8 +11,8 @@ function console(mess, type) {
  * Verifies that all fields have been properly filled out and the finish button can or cant be enabled
  */
 function checkFinishDisability() {
-    let numberOfInputs = $('.featherlight-inner .content .well .row .form-control').length;
-    let numberOfCompletedInputs = $('.featherlight-inner .content .well .row .form-control').filter(function () {
+    let numberOfInputs = $('.featherlight-inner .content .row .form-control').length;
+    let numberOfCompletedInputs = $('.featherlight-inner .content .row .form-control').filter(function () {
         return ($(this).hasClass('type') && $(this).hasClass('autocompleted')) || // type field needs to be autocompleted
             ($(this).hasClass('numbers') && $(this).val().match(/[0-9]{1,}/)) || // numbers field should have at least 1 number
             ($(this).hasClass('description')) // the description field can optionally be blank
@@ -26,7 +26,7 @@ function redirectToOriginalForm () {
 }
 
 function removeResourceRow () {
-    if ($(this).find('.row').length > 1) { // ensure that we can not remove the last remaining row
+    if ($(".featherlight-inner .content").find('.row').length > 1) { // ensure that we can not remove the last remaining row
         $(this).closest('.row').slideUp(200, function () {
             $(this).remove();
             checkFinishDisability();
@@ -35,7 +35,7 @@ function removeResourceRow () {
 }
 
 function addResourceRow(inputRow) {
-    $('.featherlight-inner .content .well').append(inputRow);
+    $('.featherlight-inner .content').append(inputRow);
     checkFinishDisability();
 }
 
@@ -109,7 +109,7 @@ async function addAllResources() { // Add Resources
     });
     
     // Get the console
-    $('.featherlight-inner .content .well').html(await Utility.pullResource('WebCheckout/templates/resource_adder/console.html', {}, true));
+    $('.featherlight-inner .content').html(await Utility.pullResource('WebCheckout/templates/resource_adder/console.html', {}, true));
 
     // add the resources
     let req = Requests.addResources(allResources).then(function () {

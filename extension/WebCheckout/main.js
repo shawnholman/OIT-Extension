@@ -1,4 +1,4 @@
-import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardShortcutsModule} from './modules';
+import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardShortcutsModule, WhatsNewModule} from './modules';
 
 (function main($) {
     function installModule (module) {
@@ -15,7 +15,8 @@ import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardSho
         installModule(RemovePrefixModule);
         installModule(ResourceAdderModule);
         installModule(PatronSearchModule);
-        installModule(KeyboardShortcutsModule)
+        installModule(WhatsNewModule);
+        installModule(KeyboardShortcutsModule);
     });
     
     // Appends the inject.js script to webpage so that it receives full access to the page.

@@ -5,6 +5,17 @@ NC='\033[0m' # No Color
 
 #rm ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
 
+# See if there is a "What's New" file ready for this version
+if [ ! -f ./extension/WebCheckout/templates/whats_new/$CURRENT_EXTENSION_VERSION.html ]; then
+    echo "A 'What's New for version" $CURRENT_EXTENSION_VERSION " does not exist. Would you like to proceed (y/n)";
+    read answer;
+    
+    if [ $answer = 'n' ]; then
+        exit 1;
+    fi
+    echo "CONTINUE";
+fi
+
 # Check to see if both files already exist. Chances are, this means that the developer has not updated the verson inside the manifest
 if [[ -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
      echo "ZIP and XPI Files for version $CURRENT_EXTENSION_VERSION already exists."
