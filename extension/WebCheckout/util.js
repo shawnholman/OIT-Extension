@@ -1,4 +1,4 @@
-import {globalRuntime} from './constants.js';
+import {GLOBAL_RUNTIME} from './constants.js';
 /** Utilities */
 
 // cache resources
@@ -22,7 +22,7 @@ export const Utility = {
                     resolve(cache[address]);
                 }
             }
-            $.get(globalRuntime.getURL(address)).then(function (content) {
+            $.get(GLOBAL_RUNTIME.getURL(address)).then(function (content) {
                 if (templater) {
                     for (let el in templater) {
                         content = content.replace('${' + el + '}', templater[el]);

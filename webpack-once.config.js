@@ -13,6 +13,5 @@ module.exports = {
     output: {
         path: '/Users/mediadsk/Desktop/OIT-Extension/extension/WebCheckout',
         filename: '[name].build.js'
-    },
-    watch: true
+    }
 };

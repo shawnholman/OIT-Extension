@@ -1,5 +1,5 @@
 import {Utility} from './util.js';
-import {isChrome, host} from './constants.js';
+import {IS_CHROME, HOST} from './constants.js';
     
 /** Holds different requests that can be made. */
 export let Requests = {
@@ -18,7 +18,7 @@ export let Requests = {
                         resolve(person);
                     },
                     error: function (err) {
-                        const errorMsg = isChrome ? "User does not exist in either systems." :
+                        const errorMsg = IS_CHROME ? "User does not exist in either systems." :
                                             "Adding Users is Temporarily Disabled on Firefox";
                         reject(errorMsg);
                     }
@@ -91,7 +91,7 @@ export let Requests = {
         resource: function (string) {
             return new Promise (function (resolve, reject) {
                 $.ajax({
-                    url: host + '/webcheckout/rest/resourceType/autocomplete',
+                    url: HOST + '/webcheckout/rest/resourceType/autocomplete',
                     type: "POST",
                     dataType: "json",
                     data: `{"string": "${string}", "properties": ["name", "description"]}`,
@@ -127,7 +127,7 @@ export let Requests = {
         person: function (id) {
             return new Promise (function (resolve, reject) {
                 $.ajax({
-                    url: host + '/webcheckout/rest/person/Autocomplete',
+                    url: HOST + '/webcheckout/rest/person/Autocomplete',
                     type: "POST",
                     dataType: "json",
                     data: `{"string": "${id}", "limit": 30}`,
@@ -161,7 +161,7 @@ export let Requests = {
     setPatron: function (oid) {
         return new Promise (function (resolve, reject) {
                 $.ajax({
-                    url: host + '/webcheckout/wco/api/set-patron',
+                    url: HOST + '/webcheckout/wco/api/set-patron',
                     type: "POST",
                     data: {
                         oid: oid,
@@ -206,7 +206,7 @@ export let Requests = {
                             let reg = /\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;
                             let oid = resp.match(reg)[1];
                             $.ajax({
-                                url: host + '/webcheckout/rest/resource/update',
+                                url: HOST + '/webcheckout/rest/resource/update',
                                 type: "POST",
                                 dataType: "json",
                                 data: '{"oid": ' + oid + ', "values": {"description": "' + description + '"}}',

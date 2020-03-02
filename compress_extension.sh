@@ -4,7 +4,6 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 #rm ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
-
 # See if there is a "What's New" file ready for this version
 if [ ! -f ./extension/WebCheckout/templates/whats_new/$CURRENT_EXTENSION_VERSION.html ]; then
     echo "A 'What's New for version" $CURRENT_EXTENSION_VERSION " does not exist. Would you like to proceed (y/n)";
@@ -17,23 +16,29 @@ if [ ! -f ./extension/WebCheckout/templates/whats_new/$CURRENT_EXTENSION_VERSION
 fi
 
 # Check to see if both files already exist. Chances are, this means that the developer has not updated the verson inside the manifest
-if [[ -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
+#if [[ -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
+if [[ -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]]; then
      echo "ZIP and XPI Files for version $CURRENT_EXTENSION_VERSION already exists."
      printf "${RED} Did you forget to update the manifest.json file with the newest version?${NC}"
      echo ""
      exit 1
 fi
 
+echo "Packing the extension.."
+webpack --config webpack-once.config.js 
+
 # Create the necessary zip file for Chrome if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]; then
     echo "Creating ZIP file for Chrome extension.."
     cd extension; zip -rq ../prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip *
-    cd ..
-    git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
+    cd -
     echo "SUCCESS"
 else
     echo "ZIP File for version $CURRENT_EXTENSION_VERSION already exists."
 fi
+
+: '
+Creating firefox extensions does not appear to work at the moment anymore
 
 # Create the necessary xpi file for Firefox if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
@@ -51,13 +56,13 @@ if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]; then
     rm ./extension/.web-extension-id
     
     echo "Updated git"
-    git add ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi
     echo "SUCCESS"
 else 
     echo "XPI File for version $CURRENT_EXTENSION_VERSION already exists."
-fi
+fi'
 
 if [[ ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip && ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ]]; then
+     git add prod/*
      git commit -am "Upgraded to version $CURRENT_EXTENSION_VERSION"
      git push
 fi

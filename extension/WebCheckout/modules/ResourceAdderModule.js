@@ -44,15 +44,15 @@ function assignAutoCompletedValue () {
     let value = $(this).text();
 
     $(this).parent().prev().data('oid', oid).val(value).addClass('autocompleted');
-    $(this).parent().empty();
+    $(this).parent().empty().hide();
     checkFinishDisability();
 }
 
 function emptyAutoCompleted () {
-    $('.featherlight-inner .autocomplete').empty();
+    $('.featherlight-inner .autocomplete').empty().hide();
 }
 
-function loopUpAutoCompletedValues () {
+function loadUpAutoCompletedValues () {
     let value = $(this).val();
     $(this).removeClass('autocompleted');
     Requests.autocomplete.resource(value).then((results) => {
@@ -61,7 +61,13 @@ function loopUpAutoCompletedValues () {
             for (let result of results) {
                 list += `<li data-oid="${result.oid}">${result.name}</li>`;
             }
-            $(this).next().html(list); // add the list of items
+            $(this).next().html(list)
+            if (list != '') { // if list is not empty
+                $(this).next().show(); // add the list of items
+            } else {
+                $(this).next()
+                    .hide();
+            }
         }
     });
 }
@@ -173,7 +179,7 @@ export class ResourceAdderModule {
                     .on('click', emptyAutoCompleted)
                     .on('click', '.remove-row', removeResourceRow)
                     .on('click', '.autocomplete li', assignAutoCompletedValue)
-                    .on('keyup', '.type.form-control', loopUpAutoCompletedValues)
+                    .on('keyup', '.type.form-control', loadUpAutoCompletedValues)
                     .on('blur', '.type.form-control', tryAndCompleteAutoCompleteAssignment)
                     .on('keyup change', '.form-control', checkFinishDisability);
                         

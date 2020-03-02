@@ -134,9 +134,11 @@ export class KeyboardShortcutsModule {
         // Commit Button
         this._key("c", this._clickOn("#commit-button .submit-all", "Checkout")); 
         // Timeline Scheduler Button (aka. Back to Checkout Button)
-        this._key(["t", "b"], this._clickOn("button:contains('Timeline Scheduler')", "Back to Checkout", true));
+        this._key(["b", "t"], this._clickOn("button:contains('Timeline Scheduler')", "Back to Checkout", true));
         // Confirm Checkout Button
         this._key("r", this._clickOn("a:contains('Reset')", "Reset Checkout"));
+        // Return Resource Button
+        this._key("q", this._clickOn("input[value='Return Resource']", "Return Resource", true));
     }
     
     _openShortCutMenu() {
