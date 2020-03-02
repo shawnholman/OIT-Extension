@@ -20,6 +20,9 @@ npm install --global gulp-cli
 echo "Install firefox web extensions cli"
 npm install --global web-ext
 
+npm install --global webpack
+npm install --global webpack-cli
+
 # Configure git for use inside of the terminal
 echo "Running 'git config'"
 git config --global user.email "mediadsk@uga.edu"
