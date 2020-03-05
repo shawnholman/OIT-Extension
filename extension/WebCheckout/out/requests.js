@@ -1,15 +1,16 @@
-import {Utility} from './util.js';
-import {IS_CHROME, HOST} from './constants.js';
-    
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_js_1 = require("./util.js");
+const constants_js_1 = require("./constants.js");
 /** Holds different requests that can be made. */
-export let Requests = {
+exports.Requests = {
     /**
      * All of these requests should be done here through the COE OIT System
      */
     CoeOitApi: {
         findUser: function (userid) {
             //userid = "6235678118879000";
-            return  new Promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 $.ajax({
                     url: "https://coeoit.coe.uga.edu:47715/api/v1/webcheckout/user/" + userid,
                     type: "GET",
@@ -18,33 +19,32 @@ export let Requests = {
                         resolve(person);
                     },
                     error: function () {
-                        const errorMsg = IS_CHROME ? "User does not exist in either systems." :
-                                            "Adding Users is Temporarily Disabled on Firefox";
+                        const errorMsg = constants_js_1.IS_CHROME ? "User does not exist in either systems." :
+                            "Adding Users is Temporarily Disabled on Firefox";
                         reject(errorMsg);
                     }
                 });
             });
-        }    
+        }
     },
     /**
      * Adds a person the WebCheckout database
      * @param {Array} data A set of data of the person
      */
     addPerson: function (data) {
-        return Utility.makeFrameRequest([
+        return util_js_1.Utility.makeFrameRequest([
             { url: '?method=new-person-wizard' },
             { url: '?method=new-userid-forward',
                 data: {
                     "new-userid-form.userid": data.ugaid,
                     "new-userid-form.first-name": data.firstname,
-                    "new-userid-form.other-name":  '',
+                    "new-userid-form.other-name": '',
                     "new-userid-form.last-name": data.lastname,
                     "new-userid-form.patron-class": data.class,
                     "new-userid-form.department": data.department
                 },
                 stop: function (resp) {
                     let foundBar = resp.match(/NOTIFICATION-BAR="" STUFFED-NOTIFICATIONS="(.*)"/);
-                    
                     // At this point, if there is something wrong with adding the user, an error bar will be
                     // added to the page. The error bar has a parameter in the HTML called "STUFFED-NOTIFICATIONS"
                     // which contains a status message in the form on JSON. We will get that JSON, parse it, and
@@ -54,11 +54,11 @@ export let Requests = {
                         try {
                             let message = foundBar[1].replace(/&quot;/g, '"');
                             let parsedMessage = JSON.parse(message)[0];
-                            
                             if (parsedMessage.type == "error") {
                                 return parsedMessage.message;
                             }
-                        } catch (e) {
+                        }
+                        catch (e) {
                             return false;
                         }
                     }
@@ -81,7 +81,6 @@ export let Requests = {
             { url: '?method=checkout-jump', finishing: true },
         ]);
     },
-
     /**
      * Find the autocomplete resources
      * @param  {String} string String to search for an autocompletion
@@ -89,9 +88,9 @@ export let Requests = {
      */
     autocomplete: {
         resource: function (string) {
-            return new Promise (function (resolve) {
+            return new Promise(function (resolve) {
                 $.ajax({
-                    url: HOST + '/webcheckout/rest/resourceType/autocomplete',
+                    url: constants_js_1.HOST + '/webcheckout/rest/resourceType/autocomplete',
                     type: "POST",
                     dataType: "json",
                     data: `{"string": "${string}", "properties": ["name", "description"]}`,
@@ -103,11 +102,11 @@ export let Requests = {
                         withCredentials: true
                     },
                     success: function (d) {
-                        if (d == null || d.payload == null) resolve([]);
+                        if (d == null || d.payload == null)
+                            resolve([]);
                         else {
                             let resources = [];
                             let results = d.payload;
-
                             for (let result of results) {
                                 if (result.label == "OIT") {
                                     for (let value of result.values) {
@@ -125,9 +124,9 @@ export let Requests = {
             });
         },
         person: function (id) {
-            return new Promise (function (resolve) {
+            return new Promise(function (resolve) {
                 $.ajax({
-                    url: HOST + '/webcheckout/rest/person/Autocomplete',
+                    url: constants_js_1.HOST + '/webcheckout/rest/person/Autocomplete',
                     type: "POST",
                     dataType: "json",
                     data: `{"string": "${id}", "limit": 30}`,
@@ -139,7 +138,8 @@ export let Requests = {
                         withCredentials: true
                     },
                     success: function (d) {
-                        if (d == null || d.payload == null) resolve([]);
+                        if (d == null || d.payload == null)
+                            resolve([]);
                         else {
                             for (let payload of d.payload) {
                                 if (payload.values != null) {
@@ -157,27 +157,25 @@ export let Requests = {
             });
         }
     },
-    
     setPatron: function (oid) {
-        return new Promise (function (resolve) {
-                $.ajax({
-                    url: HOST + '/webcheckout/wco/api/set-patron',
-                    type: "POST",
-                    data: {
-                        oid: oid,
-                        timeline: true,
-                        allocation: Utility.getAllocationId()
-                    },
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    success: function (d) {
-                        resolve(d.patron);
-                    }
-                });
+        return new Promise(function (resolve) {
+            $.ajax({
+                url: constants_js_1.HOST + '/webcheckout/wco/api/set-patron',
+                type: "POST",
+                data: {
+                    oid: oid,
+                    timeline: true,
+                    allocation: util_js_1.Utility.getAllocationId()
+                },
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (d) {
+                    resolve(d.patron);
+                }
             });
+        });
     },
-
     /**
      * Adds a set of resources to WebCheckout
      * @param {Array} resources An array of resources with formate [{ id: 12, type: "oid|type"}, ...]
@@ -206,7 +204,7 @@ export let Requests = {
                             let reg = /\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;
                             let oid = resp.match(reg)[1];
                             $.ajax({
-                                url: HOST + '/webcheckout/rest/resource/update',
+                                url: constants_js_1.HOST + '/webcheckout/rest/resource/update',
                                 type: "POST",
                                 dataType: "json",
                                 data: '{"oid": ' + oid + ', "values": {"description": "' + description + '"}}',
@@ -219,17 +217,18 @@ export let Requests = {
                                 },
                                 success: $.noop
                             });
-                        } catch (e) {
+                        }
+                        catch (e) {
                             console.error(e);
                             alert("Oops, Something Went Wrong:" + e);
                         }
                     }
                 }
-            ]
-        }
+            ];
+        };
         for (let resource of resources) {
             masterFrame = masterFrame.concat(frameSet(resource.id, resource.type, resource.description));
         }
-        return Utility.makeFrameRequest(masterFrame);
+        return util_js_1.Utility.makeFrameRequest(masterFrame);
     }
-}
+};

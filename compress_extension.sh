@@ -1,7 +1,17 @@
 # Get the current version of the extension inside of the manifest file
 CURRENT_EXTENSION_VERSION=$(cat ./extension/manifest.json | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["version"]')
 RED='\033[0;31m'
+GREEN='\033[0;32m'
 NC='\033[0m' # No Color
+LINT=$(./node_modules/.bin/eslint extension/)
+
+if [ -z "$LINT" ]; then
+    printf "${GREEN} Passed Lint${NC}\n"
+else
+    ./node_modules/.bin/eslint extension/
+    exit 1;
+
+fi
 
 #rm ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.xpi ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip
 # See if there is a "What's New" file ready for this version
@@ -26,6 +36,9 @@ fi
 
 echo "Packing the extension.."
 webpack --config webpack-once.config.js 
+
+echo "Linting..."
+./node_modules/.bin/eslint extension/
 
 # Create the necessary zip file for Chrome if it does not exist.
 if [ ! -f ./prod/oitlogging-$CURRENT_EXTENSION_VERSION.zip ]; then

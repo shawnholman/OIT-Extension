@@ -1,3 +1,4 @@
+/* global moment, WCOForm */
 /**
  * This file gets directly injected into WebCheckout. This means that it lives in the same scope as the actual website. 
  * To contrast how this is different from the other files in the extension, is that we can think main.js and jquery.js

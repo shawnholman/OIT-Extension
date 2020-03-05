@@ -1,3 +1,4 @@
+/* global key */
 import {Utility} from '../util.js';
 
 /**

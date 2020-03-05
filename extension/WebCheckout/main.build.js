@@ -81,140 +81,1180 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./extension/WebCheckout/main.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ "./extension/WebCheckout/constants.js":
-/*!********************************************!*\
-  !*** ./extension/WebCheckout/constants.js ***!
-  \********************************************/
-/*! exports provided: IS_CHROME, GLOBAL_RUNTIME, HOST, VERSION */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"IS_CHROME\", function() { return IS_CHROME; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"GLOBAL_RUNTIME\", function() { return GLOBAL_RUNTIME; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"HOST\", function() { return HOST; });\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"VERSION\", function() { return VERSION; });\n/* harmony import */ var _manifest_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../manifest.json */ \"./extension/manifest.json\");\nvar _manifest_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__webpack_require__.t(/*! ../manifest.json */ \"./extension/manifest.json\", 1);\n\n\n/** Detect which runtime variable to use so that this extension is compatible with chrome, firefox, opera, and safari */\nconst IS_CHROME = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);\n\n/** Selects a runtime variable based on the browser */\nconst GLOBAL_RUNTIME = IS_CHROME ? chrome.runtime : browser.runtime;\n\n/**\n * The host of the webcheckout system. Needed on requestions in firefox due to\n * https://github.com/greasemonkey/greasemonkey/issues/2680\n */\nconst HOST = \"https://webcheckout2.coe.uga.edu\";\n\n\nconst VERSION = _manifest_json__WEBPACK_IMPORTED_MODULE_0__.version;\n\n//# sourceURL=webpack:///./extension/WebCheckout/constants.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/main.js":
-/*!***************************************!*\
-  !*** ./extension/WebCheckout/main.js ***!
-  \***************************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _modules__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./modules */ \"./extension/WebCheckout/modules/index.js\");\n\n\n(function main($) {\n    function installModule (module) {\n        const createdModule = new module();\n        if (module.hasOwnProperty('install')) {\n            let moduleName = module.constructor.name;\n            console.error(`Module \"${moduleName}\": Could not be installed due to missing install method.`);\n        } else {\n            createdModule.install();  \n        } \n    }\n\n    $(document).ready(function () {\n        installModule(_modules__WEBPACK_IMPORTED_MODULE_0__[\"RemovePrefixModule\"]);\n        installModule(_modules__WEBPACK_IMPORTED_MODULE_0__[\"ResourceAdderModule\"]);\n        installModule(_modules__WEBPACK_IMPORTED_MODULE_0__[\"PatronSearchModule\"]);\n        installModule(_modules__WEBPACK_IMPORTED_MODULE_0__[\"WhatsNewModule\"]);\n        installModule(_modules__WEBPACK_IMPORTED_MODULE_0__[\"KeyboardShortcutsModule\"]);\n    });\n    \n    // Appends the inject.js script to webpage so that it receives full access to the page.\n    let s = document.createElement('script');\n    s.src = chrome.extension.getURL('WebCheckout/inject.js');\n    (document.head || document.documentElement).appendChild(s);\n})(jQuery);\n\n//# sourceURL=webpack:///./extension/WebCheckout/main.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/KeyboardShortcutsModule.js":
-/*!******************************************************************!*\
-  !*** ./extension/WebCheckout/modules/KeyboardShortcutsModule.js ***!
-  \******************************************************************/
-/*! exports provided: KeyboardShortcutsModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"KeyboardShortcutsModule\", function() { return KeyboardShortcutsModule; });\n/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util.js */ \"./extension/WebCheckout/util.js\");\n\n\n/**\n * The ShortCutModule implements several useful shortcuts to be used across WebCheckout\n */\nclass KeyboardShortcutsModule { \n    constructor() {\n        this.activeKeyList = {};\n\n        this.keyToSymbol = {\n            \"command\": \"⌘\",\n            \"shift\": \"⇧\",\n            \"option\": \"⌥\",\n            \"alt\": \"⌥\"\n        }  \n    }\n    \n    /**\n     * Sets the prefix to be used inside of the _key method.\n     * @param prefix which should be in the format of \"key1+key2+....KeyN\" (Note: no + at the end)\n     */\n    _setPrefix(prefix) {\n        this.keyPrefix = prefix + \"+\";    \n    }\n    \n    /**\n     * This method attaches a key to an event by utilizing the keymaster.js library included in the lib folder.\n     * @param keys Either a single key character (\"a\") or an array of characters [\"a\", \"b\"] to attach a single event\n     * to multiple keys\n     * @param event The event to be triggered on key press\n     *\n     * Note, it is recommended to set the prefix using _setPrefix(), before you attach a set of keys. See: _installRedirects method \n     * for an example.\n     */\n    _key(keys, event) {\n        if (event == false) {\n            return;\n        }\n        \n        const prefix = this.keyPrefix || \"\";\n        let keyPressed;\n        \n        if (Array.isArray(keys)) {\n            let combos = keys.reduce((accum, curr) => {\n                    return accum + prefix + curr + \",\"; \n            }, \"\").slice(0, -1);\n            \n            keyPressed = keys[0];\n            key(combos, event.func);\n        } else if (typeof keys === \"string\") {\n            keyPressed = keys;\n            key(prefix + keyPressed, event.func);\n        }\n        \n        // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.\n        // For example, command+shirt+A would turn into ⌘+⇧+A\n        let shortcutName = (prefix + keyPressed);/*.replace(new RegExp(Object.keys(this.keyToSymbol).join(\"|\"), \"g\"), (m) => {\n            return this.keyToSymbol[m];\n        });*/\n        this.activeKeyList[shortcutName] = event.label;\n    }\n\n    _createMeta(label, func) {\n        return { label, func };\n    }\n    /**\n     * Creates the event listener that will take a user to a new link\n     * @param href Link to go to\n     */\n    _goTo(href, label) {\n        return this._createMeta(\"Go to \" + label, () => {\n            window.location.href = href;\n        });\n    }\n    \n    /**\n     * Creates the event listener that will click on elements\n     * @param element The id that unique identifies the clickable element..if more than one element are found an error will be thrown\n     * @param dynamic specifies whether the element should be regiester on page load (non-dynamic) or should be checked for when the\n     * event it triggered (dynamic)\n     */\n    _clickOn(element, label, dynamic) {\n        if (dynamic == undefined || dynamic == false) {\n            let el = $(element);\n            if (el.length == 1) {\n                return this._createMeta(label, () => el[0].click());\n            } else {\n                if (el.length > 1) {\n                    throw new Error(\"Can not identify a unique clickable element.\");\n                }\n                return false;\n            }\n        }\n        \n        return this._createMeta(label, () => {\n            let el = $(element);\n            if (el.length == 1) {\n               el[0].click(); \n            }\n            if (el.length > 1) {\n                throw new Error(\"Can not identify a unique clickable element.\");\n            }\n        });\n    }\n    \n    _removeFilter() {\n        // See: https://github.com/madrobby/keymaster#filter-key-presses\n        key.filter = function () {\n            return true;\n        }\n    }\n    \n    _installRedirects() {\n        this._setPrefix(\"ctrl+shift\");\n        \n        // Checkout Page\n        this._key(\"c\", this._goTo(\"?method=checkout-jump\", \"Checkout\"));\n        // New Reservation Page\n        this._key(\"r\", this._goTo(\"?method=reservation-jump\", \"Reservation\"));\n        // Reservation Pickup Page\n        this._key(\"p\", this._goTo(\"?method=find-reservations\", \"Pickup\"));\n        // Find Checkouts Page (aka Rapid Return)\n        this._key(\"f\", this._goTo(\"?method=find-checkouts\", \"Find Checkouts\"));\n        // Quick Return Page (aka Rapid Return)\n        this._key(\"q\", this._goTo(\"?method=rapid-return\", \"Quick Return\"));\n    }\n    \n    _installClicks() {\n        this._setPrefix(\"ctrl+option\");\n        // Confirm Checkout Button\n        this._key(\"c\", this._clickOn(\"button:contains('Confirm Checkout')\", \"Confirm Checkout\", true));\n        \n        this._setPrefix(\"ctrl\");\n        // Commit Button\n        this._key(\"c\", this._clickOn(\"#commit-button .submit-all\", \"Checkout\")); \n        // Timeline Scheduler Button (aka. Back to Checkout Button)\n        this._key([\"b\", \"t\"], this._clickOn(\"button:contains('Timeline Scheduler')\", \"Back to Checkout\", true));\n        // Confirm Checkout Button\n        this._key(\"r\", this._clickOn(\"a:contains('Reset')\", \"Reset Checkout\"));\n        // Return Resource Button\n        this._key(\"q\", this._clickOn(\"input[value='Return Resource']\", \"Return Resource\", true));\n    }\n    \n    _openShortCutMenu() {\n        let shortcuts = \"\";\n        \n        for (let shortcut in this.activeKeyList) {\n            shortcuts += \"<pre style='border-radius: 0;margin: 0;border: none;background: white;padding: 5px 20px;'>\" + shortcut +  \"<span style='float:right'>\" + this.activeKeyList[shortcut] + \"</span></pre>\";\n        }\n        \n        _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/keyboard_shortcuts/index.html', { shortcuts }, true).then(function (content) {\n            _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].openLightBox(content, function () {});\n        });\n    }\n    \n    install() {\n        this._removeFilter();\n        this._installRedirects();\n        this._installClicks();\n        \n        localStorage.setItem(\"list\", JSON.stringify(this.activeKeyList));\n        $(\"#statusbar .rightStatusBar\").append(`<div class=\"rightSessionContent\" style=\"margin-right: 5px;\"><button class=\"button\" id=\"openShortcuts\">Shortcuts</button></div>`);\n        $(\"#openShortcuts\").on('click', () => {\n            this._openShortCutMenu();\n        })\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/KeyboardShortcutsModule.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/PatronSearchModule.js":
-/*!*************************************************************!*\
-  !*** ./extension/WebCheckout/modules/PatronSearchModule.js ***!
-  \*************************************************************/
-/*! exports provided: PatronSearchModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"PatronSearchModule\", function() { return PatronSearchModule; });\n/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util.js */ \"./extension/WebCheckout/util.js\");\n/* harmony import */ var _requests_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../requests.js */ \"./extension/WebCheckout/requests.js\");\n\n\n\n// patron timer in order to verify a scan\nlet patronTimer;\n\n/**\n * The PatronSearchModule improves the experience of searching for a patron by linking the search with the OITLogging\n */\nclass PatronSearchModule {\n    async _createPersonWell(persondata) {\n            // skip a spot here since the values start at 1\n            let classes = [\n                'Other', \n                'Continuing education', \n                'Undergraduate freshman', \n                'Undergraduate sophomore', \n                'Undergraduate junior', \n                'Undergraduate senior', \n                'Graduate 1', \n                'Graduate 2', \n                'Employee', \n                'Faculty',\n            ];\n            let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {\n                return \"(\" + $1 + \") \" + $2 + \"-\" + $3;\n            });\n\n            persondata.class = !isNaN(persondata.class) ? classes[persondata.class - 1] : persondata.class;\n            persondata.formatedNumber = formatedNumber;\n            return _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/new_person/index.html', persondata);\n    };\n    \n    async _findPatronWebCheckout (patronid, found, notfound) {\n        let persons = await _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].autocomplete.person(patronid);\n        if (persons != null && persons.length == 1) { \n            found(persons[0]);\n        } else {\n            let multipleEntries = persons != null ? persons.length > 1 : false;\n            notfound(multipleEntries);\n        }\n    }\n    \n    _setWebCheckoutPatron (id) {\n        return _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].setPatron(id).then(function (patron) {\n            $(\"#input-patron\").css('color', 'black').blur().val(patron.name);\n            $('.patron-info').removeClass('hidden');\n            $(\".patron-info-id\").text(patron.userid);\n            $(\".patron-info-dept\").text(\" Dept: \" + patron.department);\n            $(\"#input-barcode\").focus(); // add focus to input where you scan barcodes so that you do not have to click it \n \n            $.featherlight.close();\n        });\n    };\n\n    _searchPatron(immediate) {\n        let patron = $(\"#input-patron\").val();\n        \n        clearTimeout(patronTimer);\n        \n        if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters\n            $('.patron-info').addClass('hidden');\n            $(\"#input-patron\").css('color', 'black');\n            return;\n        }\n        \n        // if the patron we are searching is being search by number then we need to do a few things\n        if (!isNaN(Number(patron)) && patron.length == 16) {\n            // Historic Context for this line of code:\n            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. \n            // This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)\n            // Any UGA ID Printed after April of 2019, now only displays the 81# while the barcode still scans all 16.\n            // For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that\n            // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.\n            patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#\n        }\n            \n        patronTimer = setTimeout(async () => {\n            this._findPatronWebCheckout(patron, (person) => {\n                this._setWebCheckoutPatron(person.oid);\n            }, async (multipleEntries) => {\n                try {\n                    if (multipleEntries) {\n                        throw \"Unique identity was unable to be found\";\n                    }\n                        \n                    let oitperson = await _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].CoeOitApi.findUser(patron);\n                    let parsedPerson = _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].parseToDataString(oitperson.wcoCode);\n                    \n                    $(\"#input-patron\").css(\"color\", \"black\");\n                \n                    _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].openLightBox(await this._createPersonWell(parsedPerson), function () {\n                        // add the user\n                        let req = _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].addPerson(parsedPerson).then(() => { // create the request\n                            $(\"#person-ticket\").parent().prepend('<div class=\"alert alert-success\"><strong>Success!</strong> User has been added!</div>');\n                            $('#person-ticket .progress').hide();\n                            \n                            this._findPatronWebCheckout(patron, function (person) {\n                                this._setWebCheckoutPatron(person.oid);\n                            });\n                        }, (err) => {\n                            $(\"#person-ticket\").parent().prepend(`<div class=\"alert alert-danger\"><strong>Error!</strong> ${err}</div>`);\n                        });\n                        req.progress(function (prog, frame) {\n                            $('#person-ticket .progress-bar').attr('aria-valuenow', prog.percent*100).width(prog.percent*100 + '%');\n                        });\n                        \n                    });\n                } catch (message) {\n                    $(\"#input-patron\").css('color', 'red');\n                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text(message)\n                }\n            });\n        }, immediate === true ? 0 : 50);\n    }\n    \n    install() {\n        $(\"#input-patron\").on(\"keyup\", this._searchPatron.bind(this));\n        \n        // Whenever the operator types in a patron, they can hit enter before this script can have a chance\n        // to autocomplete. When this happens, you are prompted with a box to select a user. Once you select\n        // a user, the follow piece of code just makes the patron name turn back from red to black.\n        $(document).on(\"click\", \".ui-dialog-buttonset .ui-button-text\", function () {\n            $(\"#input-patron\").css(\"color\", \"black\");\n        });\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/PatronSearchModule.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/RemovePrefixModule.js":
-/*!*************************************************************!*\
-  !*** ./extension/WebCheckout/modules/RemovePrefixModule.js ***!
-  \*************************************************************/
-/*! exports provided: RemovePrefixModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"RemovePrefixModule\", function() { return RemovePrefixModule; });\n/**\n * This module removes the OIT- prefix from any barcode that has it. Etc. \"OIT-4455\" => \"4455\"\n */\nclass RemovePrefixModule {\n    _removePrefix () {\n        $(this).val($(this).val().replace(/OIT-/, ''));\n    }  \n    \n    install() {\n        $(\"#input-barcode, textarea[id^='rapid']\").on(\"keydown\", this._removePrefix);\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/RemovePrefixModule.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/ResourceAdderModule.js":
-/*!**************************************************************!*\
-  !*** ./extension/WebCheckout/modules/ResourceAdderModule.js ***!
-  \**************************************************************/
-/*! exports provided: ResourceAdderModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"ResourceAdderModule\", function() { return ResourceAdderModule; });\n/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util.js */ \"./extension/WebCheckout/util.js\");\n/* harmony import */ var _requests_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../requests.js */ \"./extension/WebCheckout/requests.js\");\n\n\n\nfunction console(mess, type) {\n    let classes = type || 'default';\n    document.getElementById('progress-prompt').innerHTML += `<div class='${classes}'>${mess}</div>`;\n    document.getElementById('progress-prompt').scrollTop = document.getElementById('progress-prompt').scrollHeight;\n}\n\n/**\n * Verifies that all fields have been properly filled out and the finish button can or cant be enabled\n */\nfunction checkFinishDisability() {\n    let numberOfInputs = $('.featherlight-inner .content .row .form-control').length;\n    let numberOfCompletedInputs = $('.featherlight-inner .content .row .form-control').filter(function () {\n        return ($(this).hasClass('type') && $(this).hasClass('autocompleted')) || // type field needs to be autocompleted\n            ($(this).hasClass('numbers') && $(this).val().match(/[0-9]{1,}/)) || // numbers field should have at least 1 number\n            ($(this).hasClass('description')) // the description field can optionally be blank\n    }).length;\n\n    $(\"#finishadding\").attr(\"disabled\", !(numberOfInputs == numberOfCompletedInputs));\n}\n\nfunction redirectToOriginalForm () {\n     document.location = '?method=new-resource-wizard';\n}\n\nfunction removeResourceRow () {\n    if ($(\".featherlight-inner .content\").find('.row').length > 1) { // ensure that we can not remove the last remaining row\n        $(this).closest('.row').slideUp(200, function () {\n            $(this).remove();\n            checkFinishDisability();\n        });\n    }\n}\n\nfunction addResourceRow(inputRow) {\n    $('.featherlight-inner .content').append(inputRow);\n    checkFinishDisability();\n}\n\nfunction assignAutoCompletedValue () {\n    let oid = $(this).data('oid');\n    let value = $(this).text();\n\n    $(this).parent().prev().data('oid', oid).val(value).addClass('autocompleted');\n    $(this).parent().empty().hide();\n    checkFinishDisability();\n}\n\nfunction emptyAutoCompleted () {\n    $('.featherlight-inner .autocomplete').empty().hide();\n}\n\nfunction loadUpAutoCompletedValues () {\n    let value = $(this).val();\n    $(this).removeClass('autocompleted');\n    _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].autocomplete.resource(value).then((results) => {\n        if ($(this).is(':focus')) { // only show the results if we are still focuses on the input\n            let list = '';\n            for (let result of results) {\n                list += `<li data-oid=\"${result.oid}\">${result.name}</li>`;\n            }\n            $(this).next().html(list)\n            if (list != '') { // if list is not empty\n                $(this).next().show(); // add the list of items\n            } else {\n                $(this).next()\n                    .hide();\n            }\n        }\n    });\n}\n\nfunction tryAndCompleteAutoCompleteAssignment () {\n    if (!$(this).hasClass('autocompleted')) {\n        let value = $(this).val();\n        _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].autocomplete.resource(value).then((results) => { // check the current value of the input and see if we can derive an auto completed value anyways\n            if (results.length == 1) { // if the input only gives one autocorrected result then we can use that result to finish the completion\n                let result = results[0];\n                $(this).data('oid', result.oid).val(result.name).addClass('autocompleted');\n            } else {\n                // however, even if we get multiple results, if the input value matches one of the autocompleted ones exactly,\n                // we can choose that one as the autocorrect\n                for (let result of results) {\n                    if (result.name == value) {\n                        $(this).data('oid', result.oid).addClass('autocompleted');\n\n                        break;\n                    }\n                }\n            }\n            checkFinishDisability();\n        });\n    }\n}\n\nasync function addAllResources() { // Add Resources\n    // collect together all of the resources from the input\n    let allResources = [];\n\n    $('#finishadding, #addresource').attr('disabled', true);\n    \n    // collect the information from each inputRow\n    $('.featherlight-inner .content .row').each(function () {\n        const row =  $(this);\n        const type = row.find('.type').data('oid') + '|' + row.find('.type').val();\n        const resourceIds = row.find('.numbers').val().split(/\\s*,\\s*/);\n        const description = row.find('.description').val();\n\n        for (let resourceId of resourceIds) {\n            allResources.push({\"id\": resourceId, type, description});\n        }\n        row.remove();\n    });\n    \n    // Get the console\n    $('.featherlight-inner .content').html(await _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/resource_adder/console.html', {}, true));\n\n    // add the resources\n    let req = _requests_js__WEBPACK_IMPORTED_MODULE_1__[\"Requests\"].addResources(allResources).then(function () {\n        $('#cancel, #finishadding, #addresource').attr('disabled', true);\n        console('All Resources have been added.', 'success');\n    });\n\n    req.progress(function (prog, frame) { // progress as the resources are added\n        const cantCancel = (frame != null && frame.hasOwnProperty('finishing') && frame.finishing == true) || prog.total - prog.completed == 1;\n\n        $('#cancel').attr('disabled', cantCancel);\n\n        switch (prog.completed % 4) {\n            case 0:\n                console('Resetting resource creator..');\n                break;\n            case 1:\n                const id = frame.data[\"choose-resource-id-form.resource-id\"];\n                console(`Creating resource  ${id} ..`);\n                break;\n            case 2:\n                const type = frame.data[\"choose-resource-type-form.search-field\"];\n                console(`Connecting type ${type} ..`);\n                break;\n            case 3:\n                console('Finishing Resource Creation..');\n                break;\n        }\n\n        let progressBar = $('.featherlight-inner .content .progress-bar');\n\n        if (prog.remaining == 0) {\n            progressBar.parent().prev().hide()\n        } else {\n            progressBar.parent().prev().show().find('strong').text(Math.round(prog.remaining) + ' seconds');\n        }\n        progressBar.attr('aria-valuenow', prog.percent * 100).width(prog.percent * 100 + '%');\n    });\n\n    $(\"#cancel\").off('click').on('click', () => {\n        req.cancel();\n        $('#cancel, #finishadding, #addresource').attr('disabled', true);\n        $('.featherlight-inner .content .progress').hide().parent().prev().hide();\n        console('Cancelled. Current Resource will be revoked and any pending resources will be ignored.', 'error');\n    });\n}\n\n/**\n * The ResourceAdderModule modernizes the way that new resources are added into the system. This module is put into \n * action when clicking the \"New Resource\" button under resources.\n */\nclass ResourceAdderModule {\n    async _openResourceAdder () {\n        const inputRow = await _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/resource_adder/inputRow.html', {}, true);\n\n        _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/resource_adder/index.html', { inputRow }, true).then(function (content) {\n            _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].openLightBox(content, function () {\n                $('#originalform').on('click',  redirectToOriginalForm);\n\n                $('.featherlight-inner')\n                    .on('click', emptyAutoCompleted)\n                    .on('click', '.remove-row', removeResourceRow)\n                    .on('click', '.autocomplete li', assignAutoCompletedValue)\n                    .on('keyup', '.type.form-control', loadUpAutoCompletedValues)\n                    .on('blur', '.type.form-control', tryAndCompleteAutoCompleteAssignment)\n                    .on('keyup change', '.form-control', checkFinishDisability);\n                        \n                // We are passing the input row in so that we do not need to make new\n                // resource calls for each added resource\n                $(\"#addresource\").on('click', addResourceRow.bind(this, inputRow));\n                $(\"#finishadding\").on('click', addAllResources);\n            });\n        });\n    }\n    \n    install() {\n        $('#new-resource-wizard').removeAttr('href').on('click', this._openResourceAdder);\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/ResourceAdderModule.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/WhatsNewModule.js":
-/*!*********************************************************!*\
-  !*** ./extension/WebCheckout/modules/WhatsNewModule.js ***!
-  \*********************************************************/
-/*! exports provided: WhatsNewModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"WhatsNewModule\", function() { return WhatsNewModule; });\n/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util.js */ \"./extension/WebCheckout/util.js\");\n/* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../constants.js */ \"./extension/WebCheckout/constants.js\");\n\n\n\n/** Version of the most up to date version that should be in the what's new */\nconst SEEN_LIST = \"webcheckout_seen_list\";\n/**\n * The ShortCutModule implements several useful shortcuts to be used across WebCheckout\n */\nclass WhatsNewModule { \n    async _openWhatsNew() {\n        const content = await _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource(`WebCheckout/templates/whats_new/${_constants_js__WEBPACK_IMPORTED_MODULE_1__[\"VERSION\"]}.html`);\n        \n        _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].pullResource('WebCheckout/templates/whats_new/index.html', {\n            version: _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"VERSION\"],\n            text: content\n        }, true).then(function (content) {\n            _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].openLightBox(content, function () {\n                \n            });\n        });\n    }\n    \n    /** Identifies a logged in user by name (not 100% unique) */\n    _getCurrentUser() {\n        return document.querySelector(\"#statusbar .rightStatusBar a.sessionContent\").innerText.replace(\" (operator)\", \"\");\n    }\n    \n    /** Updates the seen list */\n    _setSeenList(to) {\n        localStorage.setItem(SEEN_LIST, JSON.stringify(to));\n    }\n    \n    /** Gets the seen list accounting for if the list is empty */\n    _getSeenList() {\n        const list = localStorage.getItem(SEEN_LIST);\n        if (list == null) {\n            this._setSeenList([]);\n            return [];\n        }\n        return JSON.parse(list);\n    }\n    \n    /** See if a user has seen a version previously */\n    _userHasSeenVersion(check_user, version) {\n        let list = this._getSeenList();\n        \n        for (let user of list) {\n            if (user.name == check_user && user.versionsSeen.includes(version)) {\n                return true;\n            }\n        }\n        return false;\n    }\n    \n    /** Set a user to have seen a version */\n    _setSeen(check_user, version) {\n        let list = this._getSeenList();\n        for (let user of list) {\n            if (user.name == check_user) {\n                user.versionsSeen.push(version);\n                this._setSeenList(list);\n                return true;\n            }\n        }\n        \n        list.push({\n            name: check_user,\n            versionsSeen: [version]\n        });\n        this._setSeenList(list);\n    }\n    \n    /** Checks to see if the current user should be shown the whats new box */\n    _userNotSeen() {\n        let user = this._getCurrentUser();\n        \n        if (user != \" ()\") {\n            return !this._userHasSeenVersion(user, _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"VERSION\"])\n        }\n        return false;\n    }\n    \n    install() {\n        $(\"#statusbar .rightStatusBar\").append(`<div class=\"rightSessionContent\" style=\"margin-right: 10px;\"><button class=\"button\" id=\"openWhatsNew\">What's New?</button></div>`);\n        $(\"#openWhatsNew\").on('click', () => {\n            this._openWhatsNew();\n            \n            if (this._userNotSeen()) {\n                this._setSeen(this._getCurrentUser(), _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"VERSION\"]);\n                $(\"#openWhatsNew\").removeClass(\"flash\");\n            }\n        });\n        \n        if (this._userNotSeen()) {\n            $(\"#openWhatsNew\").addClass(\"flash\");\n        }\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/WhatsNewModule.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/modules/index.js":
-/*!************************************************!*\
-  !*** ./extension/WebCheckout/modules/index.js ***!
-  \************************************************/
-/*! exports provided: RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardShortcutsModule, WhatsNewModule */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _RemovePrefixModule_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./RemovePrefixModule.js */ \"./extension/WebCheckout/modules/RemovePrefixModule.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"RemovePrefixModule\", function() { return _RemovePrefixModule_js__WEBPACK_IMPORTED_MODULE_0__[\"RemovePrefixModule\"]; });\n\n/* harmony import */ var _ResourceAdderModule_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ResourceAdderModule.js */ \"./extension/WebCheckout/modules/ResourceAdderModule.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"ResourceAdderModule\", function() { return _ResourceAdderModule_js__WEBPACK_IMPORTED_MODULE_1__[\"ResourceAdderModule\"]; });\n\n/* harmony import */ var _PatronSearchModule_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./PatronSearchModule.js */ \"./extension/WebCheckout/modules/PatronSearchModule.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"PatronSearchModule\", function() { return _PatronSearchModule_js__WEBPACK_IMPORTED_MODULE_2__[\"PatronSearchModule\"]; });\n\n/* harmony import */ var _KeyboardShortcutsModule_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./KeyboardShortcutsModule.js */ \"./extension/WebCheckout/modules/KeyboardShortcutsModule.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"KeyboardShortcutsModule\", function() { return _KeyboardShortcutsModule_js__WEBPACK_IMPORTED_MODULE_3__[\"KeyboardShortcutsModule\"]; });\n\n/* harmony import */ var _WhatsNewModule_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./WhatsNewModule.js */ \"./extension/WebCheckout/modules/WhatsNewModule.js\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"WhatsNewModule\", function() { return _WhatsNewModule_js__WEBPACK_IMPORTED_MODULE_4__[\"WhatsNewModule\"]; });\n\n\n\n\n\n\n\n//# sourceURL=webpack:///./extension/WebCheckout/modules/index.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/requests.js":
-/*!*******************************************!*\
-  !*** ./extension/WebCheckout/requests.js ***!
-  \*******************************************/
-/*! exports provided: Requests */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Requests\", function() { return Requests; });\n/* harmony import */ var _util_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util.js */ \"./extension/WebCheckout/util.js\");\n/* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants.js */ \"./extension/WebCheckout/constants.js\");\n\n\n    \n/** Holds different requests that can be made. */\nlet Requests = {\n    /**\n     * All of these requests should be done here through the COE OIT System\n     */\n    CoeOitApi: {\n        findUser: function (userid) {\n            //userid = \"6235678118879000\";\n            return  new Promise(function (resolve, reject) {\n                $.ajax({\n                    url: \"https://coeoit.coe.uga.edu:47715/api/v1/webcheckout/user/\" + userid,\n                    type: \"GET\",\n                    crossDomain: true,\n                    success: function (person) {\n                        resolve(person);\n                    },\n                    error: function (err) {\n                        const errorMsg = _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"IS_CHROME\"] ? \"User does not exist in either systems.\" :\n                                            \"Adding Users is Temporarily Disabled on Firefox\";\n                        reject(errorMsg);\n                    }\n                });\n            });\n        }    \n    },\n    /**\n     * Adds a person the WebCheckout database\n     * @param {Array} data A set of data of the person\n     */\n    addPerson: function (data) {\n        return _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].makeFrameRequest([\n            { url: '?method=new-person-wizard' },\n            { url: '?method=new-userid-forward',\n                data: {\n                    \"new-userid-form.userid\": data.ugaid,\n                    \"new-userid-form.first-name\": data.firstname,\n                    \"new-userid-form.other-name\":  '',\n                    \"new-userid-form.last-name\": data.lastname,\n                    \"new-userid-form.patron-class\": data.class,\n                    \"new-userid-form.department\": data.department\n                },\n                stop: function (resp) {\n                    let foundBar = resp.match(/NOTIFICATION-BAR=\"\" STUFFED-NOTIFICATIONS\\=\"(.*)\"/);\n                    \n                    // At this point, if there is something wrong with adding the user, an error bar will be\n                    // added to the page. The error bar has a parameter in the HTML called \"STUFFED-NOTIFICATIONS\"\n                    // which contains a status message in the form on JSON. We will get that JSON, parse it, and\n                    // see if an error has occured. If an error has occured, we will return that message which \n                    // can then be picked up in the error function parameter of the promise.\n                    if (foundBar) {\n                        try {\n                            let message = foundBar[1].replace(/\\&quot\\;/g, '\"');\n                            let parsedMessage = JSON.parse(message)[0];\n                            \n                            if (parsedMessage.type == \"error\") {\n                                return parsedMessage.message;\n                            }\n                        } catch (e) {\n                            return false;\n                        }\n                    }\n                    return false;\n                }\n            },\n            { url: '?method=new-person-contact-forward',\n                data: {\n                    \"new-person-contact-form.street\": '',\n                    \"new-person-contact-form.street2\": '',\n                    \"new-person-contact-form.city\": '',\n                    \"new-person-contact-form.state\": '',\n                    \"new-person-contact-form.postal-code\": '',\n                    \"new-person-contact-form.country\": '',\n                    \"new-person-contact-form.telephone\": data.phone,\n                    \"new-person-contact-form.email\": data.email\n                }\n            },\n            { url: '?method=new-person-create-finish' },\n            { url: '?method=checkout-jump', finishing: true },\n        ]);\n    },\n\n    /**\n     * Find the autocomplete resources\n     * @param  {String} string String to search for an autocompletion\n     * @return {Promise}\n     */\n    autocomplete: {\n        resource: function (string) {\n            return new Promise (function (resolve, reject) {\n                $.ajax({\n                    url: _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"HOST\"] + '/webcheckout/rest/resourceType/autocomplete',\n                    type: \"POST\",\n                    dataType: \"json\",\n                    data: `{\"string\": \"${string}\", \"properties\": [\"name\", \"description\"]}`,\n                    contentType: \"application/json\",\n                    headers: {\n                        Accept: \"application/json, text/plain, */*\"\n                    },\n                    xhrFields: {\n                        withCredentials: true\n                    },\n                    success: function (d) {\n                        if (d == null || d.payload == null) resolve([]);\n                        else {\n                            let resources = [];\n                            let results = d.payload;\n\n                            for (let result of results) {\n                                if (result.label == \"OIT\") {\n                                    for (let value of result.values) {\n                                        resources.push({\n                                            oid: value.oid,\n                                            name: value.name\n                                        });\n                                    }\n                                }\n                            }\n                            resolve(resources);\n                        }\n                    }\n                });\n            });\n        },\n        person: function (id) {\n            return new Promise (function (resolve, reject) {\n                $.ajax({\n                    url: _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"HOST\"] + '/webcheckout/rest/person/Autocomplete',\n                    type: \"POST\",\n                    dataType: \"json\",\n                    data: `{\"string\": \"${id}\", \"limit\": 30}`,\n                    contentType: \"application/json\",\n                    headers: {\n                        Accept: \"application/json, text/plain, */*\"\n                    },\n                    xhrFields: {\n                        withCredentials: true\n                    },\n                    success: function (d) {\n                        if (d == null || d.payload == null) resolve([]);\n                        else {\n                            for (let payload of d.payload) {\n                                if (payload.values != null) {\n                                    resolve(payload.values);\n                                    return;\n                                }\n                            }\n                            resolve([]);\n                        }\n                    },\n                    error: function (d) {\n                        console.error(\"FAIL\", d);\n                    }\n                });\n            });\n        }\n    },\n    \n    setPatron: function (oid) {\n        return new Promise (function (resolve, reject) {\n                $.ajax({\n                    url: _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"HOST\"] + '/webcheckout/wco/api/set-patron',\n                    type: \"POST\",\n                    data: {\n                        oid: oid,\n                        timeline: true,\n                        allocation: _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].getAllocationId()\n                    },\n                    xhrFields: {\n                        withCredentials: true\n                    },\n                    success: function (d) {\n                        resolve(d.patron);\n                    }\n                });\n            });\n    },\n\n    /**\n     * Adds a set of resources to WebCheckout\n     * @param {Array} resources An array of resources with formate [{ id: 12, type: \"oid|type\"}, ...]\n     */\n    addResources: function (resources) {\n        // remove 123456,\n        let masterFrame = [];\n        let frameSet = function (id, type, description) {\n            return [\n                { url: '?method=new-resource-wizard' },\n                { url: '?method=choose-resource-id-forward',\n                    data: {\n                        \"choose-resource-id-form.resource-id\": id,\n                        \"choose-resource-id-form.circulating\": true\n                    }\n                },\n                { url: '?method=choose-resource-type-forward',\n                    data: {\n                        \"choose-resource-type-form.search-field\": type\n                    }\n                },\n                { url: '?method=new-resource-wizard-finish',\n                    finishing: true,\n                    feed: function (resp) {\n                        try {\n                            let reg = /\\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;\n                            let oid = resp.match(reg)[1];\n                            $.ajax({\n                                url: _constants_js__WEBPACK_IMPORTED_MODULE_1__[\"HOST\"] + '/webcheckout/rest/resource/update',\n                                type: \"POST\",\n                                dataType: \"json\",\n                                data: '{\"oid\": ' + oid + ', \"values\": {\"description\": \"' + description + '\"}}',\n                                contentType: \"application/json\",\n                                headers: {\n                                    Accept: \"application/json, text/plain, */*\"\n                                },\n                                xhrFields: {\n                                    withCredentials: true\n                                },\n                                success: $.noop\n                            });\n                        } catch (e) {\n                            console.error(e);\n                            alert(\"Oops, Something Went Wrong:\" + e);\n                        }\n                    }\n                }\n            ]\n        }\n        for (let resource of resources) {\n            masterFrame = masterFrame.concat(frameSet(resource.id, resource.type, resource.description));\n        }\n        return _util_js__WEBPACK_IMPORTED_MODULE_0__[\"Utility\"].makeFrameRequest(masterFrame);\n    }\n}\n\n//# sourceURL=webpack:///./extension/WebCheckout/requests.js?");
-
-/***/ }),
-
-/***/ "./extension/WebCheckout/util.js":
-/*!***************************************!*\
-  !*** ./extension/WebCheckout/util.js ***!
-  \***************************************/
-/*! exports provided: Utility */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"Utility\", function() { return Utility; });\n/* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants.js */ \"./extension/WebCheckout/constants.js\");\n\n/** Utilities */\n\n// cache resources\nconst cache = {};\n    \nconst Utility = {\n    /**\n     * Pulls a resource from the local extension.\n     * @param address location of the file to pull\n     * @param templater An object of key value pairs that should correspond to templating tags inside of the resource. This will replace the tag will the value in this templater\n     *          template: <div>${name}</div>\n     *          templater: { \"name\": \"Shawn\" }\n     *          results: <div>Shawn</div>\n     * @param cachable Set to true if the resource should only be pulled once and read through a cache all of the other times. This is useful if the resource is static and has no templates.\n     * @returns {Promise<any>}\n     */\n    pullResource:  function pullResource (address, templater, cachable) {\n        return new Promise(function (resolve, reject) {\n            if (cachable) {\n                if (cache.hasOwnProperty(address)) {\n                    resolve(cache[address]);\n                }\n            }\n            $.get(_constants_js__WEBPACK_IMPORTED_MODULE_0__[\"GLOBAL_RUNTIME\"].getURL(address)).then(function (content) {\n                if (templater) {\n                    for (let el in templater) {\n                        content = content.replace('${' + el + '}', templater[el]);\n                    }\n                }\n                if (cachable) {\n                    cache[address] = content;\n                }\n                resolve(content);\n            });\n        });\n    },\n\n    /**\n     * Opens the featherlight lightbox\n     * @param content the html of the box\n     * @param afterOpen when should happen after the box is opened...this is a good place to attach events within the box\n     * @returns {*|jQuery}\n     */\n    openLightBox: function openLightBox (content, afterOpen) {\n        return $.featherlight(null, {html:content, afterOpen, openSpeed: -200});\n    },\n\n    /**\n     * Checks if an object contains all of the provided key's\n     * @param obj Object to search\n     * @param contains A list of key's to look for\n     * @returns {boolean} true if all of the keys inside of param \"contains\" is found in param \"obj\"\n     */\n    objectContainsAll: function objectContainsAll (obj, contains) {\n        for (let contain of contains) {\n            if (!(contain in obj)) return false;\n        }\n        return true;\n    },\n\n    /**\n     * Parses the data string\n     * @param {String:encoded in base64} data An base64 encoded string which when decoded has the format (spaces do not matter): name:value,name2:value2 ....etc\n     * @returns {Object|boolean} object if could be parsed and false if not\n     */\n    parseToDataString: function parseToDataString (data) {\n        try {\n            let unencode = window.atob(data); // decode string\n            let dataPoints = unencode.split(/\\s*,\\s*/); //split into data points\n            let parsedData = {};\n            for (let dataPoint of dataPoints) { // run through each datapoint\n                let dataComponents = dataPoint.split(/\\s*:\\s*/); // and split into its components\n                let dataName = dataComponents[0];\n                let dataValue = dataComponents[1];\n                parsedData[dataName] = dataValue;\n            }\n            return parsedData;\n        } catch (e) {\n            return false;\n        }\n    },\n\n    /**\n     * Find the average of an array of numbers\n     * @param numbers\n     * @returns {number}\n     */\n    average: function average (numbers) {\n        if (numbers == null || numbers.length == 0) return 0;\n        let sum = 0;\n        for (let number of numbers) {\n            sum += number;\n        }\n        return sum/numbers.length;\n    },\n    \n    /**\n     * Allows us to create a timeline of requests which contain many frames. For the case of webcheckout, this is nice way\n     * of getting an action done since they require frames of requests\n     * @param  {Array of Objects} frames The frames that will be executed through a post request\n     *      The Objects in the array have the following properties:\n     *          url (String): the request url\n     *          data (Object): the data sent with the url\n     *          feed (Function): a function that has its first parameter set to the results of the current frame. This allows you to further process the results of a frame (see addResources for an example)\n     *          other (Object): any $.ajax properties that you would like to include in this request.\n     *              In order to override being limited to a post request, you must include: other: { method: 'YOUR_DESIRED_METHOD_HERE'}\n     *          stop (Function): Allows you to stop a frame requrest given a certain condition. Return false to continue otherwise return an error message\n     *\n     *      The only required property is url. Any other parameter is added to the frame request and can be accessed inside of the progress method.\n     *\n     * @return {Promise}\n     *\n     *\n     * Special Methods have been attached to the prototype of the Promise that gets returned:\n     *      .progress(function): tracks the progress of the whole frame request..evokes 1 time per frame\n     *          passed to the function will the following variables in parameter order:\n     *              progressData: contains the properties: completed (number of frames done), total (total number of frames), percent (% completed), remaining (time remaining in seconds)\n     *              currentFrame: the data associated with the current frame (this will just be object that you used to define the frame)\n     *      .cancel(): cancels whole frame request\n     *\n     *\n     *\n     * Example:\n     *\n     *      let request = makeFrameRequest([\n     *          {\n     *              url: \"/example/request\",\n     *              data: {\n     *                  \"canDo\": true\n     *              },\n     *              other: {\n     *                  method: \"GET\" // this overrides the nature of using a post request which is the default\n     *              }\n     *              skip: true // we can access this inside of the progress function when we get to this particular frame\n     *          }\n     *      ]);\n     *      request.progress(function (progressData, currentFrame) {\n     *          console.log(\"Completed: \", progressData.completed);\n     *          console.log(\"Total: \", progressData.total);\n     *          console.log(\"Percent: \", progressData.percent, \"%\");\n     *          console.log(\"Remaining: \", progressData.remaining, \"s\");\n     *\n     *          // Note current frame equals the object defined within the makeFrameRequest array\n     *          if (currentFrame.hasOwnProperty('skip') && currentFrame.skip == true) {\n     *              request.cancel();\n     *          }\n     *      });\n     */\n    makeFrameRequest: function makeFrameRequest(frames) {\n        const Utility = this;\n        \n        let cancelled = false;\n        let totalFrames = frames.length;\n        let framesCompleted = 1;\n        let progress = null;\n        let globalTimes = []; // keep track of all of the times\n        let avgTime = Utility.average(globalTimes); // keep track of the average execution time\n\n        let startTime = performance.now();\n        let promise = new Promise(function(resolve, reject) {\n            if (frames.length == 0) { // resolve when all frames have been used\n                resolve();\n            } else {\n                let frame = frames[0]; // get the first frame\n                let additionalData = frame.other || {};\n                let feeder = frame.feed || $.noop;\n                let conditional = frame.stop || (function () {return false;});\n                let conditionalMessage = null;\n                \n                return $.ajax({\n                    method: 'POST',\n                    url: frame.url,\n                    data: frame.hasOwnProperty('data') ? frame.data : null,\n                    ...additionalData\n                }).done((resp) => { // run the request\n                    feeder(resp); // feed in the response to another function\n                    \n                    // based on the response of the request we can decide to continue or stop the frames\n                    if (!(conditionalMessage = conditional(resp))) {\n                        frames.shift(); // shift the frames\n\n                        // if the user has cancelled and we aren't on the last frame\n                        if (cancelled && frames.length != 0) {\n                            reject('cancelled');\n                        } else { // else continue making frame requests\n                            if (progress != null && typeof progress == \"function\") {\n                                let progressData = { // set progress data\n                                    completed: framesCompleted + 1,\n                                    total: totalFrames,\n                                    percent: (framesCompleted + 1) / totalFrames,\n                                    // calculate the time remaining by multiplying the frames left by the average execution time\n                                    remaining: (totalFrames - (framesCompleted + 1)) * avgTime / 1000\n                                };\n                                progress.call(this, progressData, frames[0] != undefined ? frames[0] : null);\n                            }\n\n                            //push the execution time for the purpose of generating an average\n                            globalTimes.push(performance.now() - startTime);\n                            return Utility.makeFrameRequest(frames)\n                                .then(resolve, reject)\n                                .progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests\n                        }\n                    } else {\n                        reject(conditionalMessage);\n                    }\n                }).fail(function () { // if something goes wrong then we will default back to the checkout page\n                    $.post('?method=checkout-jump');\n                    reject('error');\n                });\n            }\n        });\n        \n        Promise.prototype.progress = function (progressFunction, total, completed, times) { // keep track of progress\n            totalFrames = total || frames.length;\n            framesCompleted = completed || 0;\n            progress = progressFunction || $.noop;\n            globalTimes = times || [];\n            avgTime = Utility.average(times);\n        };\n        \n        Promise.prototype.cancel = function () {\n            cancelled = true;\n            $.post('?method=checkout-jump');\n        };\n\n        return promise;\n    },\n    \n    /**\n     * Looks for the allocation ID on the page. In particular, there is an element with id: allocation that has \n     * a link with this allocation number. In case this link changes, this method will need to be updated.\n     */\n    getAllocationId: function () {\n        if (document.getElementById(\"allocation\") == null) return;\n        let allocationLink = document.getElementById(\"allocation\").getAttribute(\"href\");\n        return allocationLink.match(/allocation\\=([0-9]+)/)[1];\n    }\n};\n\n\n//# sourceURL=webpack:///./extension/WebCheckout/util.js?");
-
-/***/ }),
-
-/***/ "./extension/manifest.json":
-/*!*********************************!*\
-  !*** ./extension/manifest.json ***!
-  \*********************************/
-/*! exports provided: content_scripts, description, manifest_version, name, permissions, version, web_accessible_resources, applications, default */
+/******/ ([
+/* 0 */
 /***/ (function(module) {
 
-eval("module.exports = JSON.parse(\"{\\\"content_scripts\\\":[{\\\"js\\\":[\\\"OneSource/main.js\\\"],\\\"matches\\\":[\\\"https://selfservice.hprod.onehcm.usg.edu/psp/hprodsssso/HCMSS/HRMS/c/ROLE_EMPLOYEE.TL_WEB_CLOCK.GBL?Page=TL_WEB_CLOCK&Action=U\\\"],\\\"run_at\\\":\\\"document_end\\\"},{\\\"css\\\":[\\\"WebCheckout/css/featherlight.css\\\",\\\"WebCheckout/css/main.css\\\"],\\\"js\\\":[\\\"WebCheckout/lib/jquery.js\\\",\\\"WebCheckout/lib/featherlight.js\\\",\\\"WebCheckout/lib/keymaster.js\\\",\\\"WebCheckout/main.build.js\\\"],\\\"matches\\\":[\\\"https://webcheckout2.coe.uga.edu/webcheckout/wco*\\\"],\\\"run_at\\\":\\\"document_end\\\"}],\\\"description\\\":\\\"This extension was built to modify OIT Systems that we do not have direct access to.\\\",\\\"manifest_version\\\":2,\\\"name\\\":\\\"OITLogging\\\",\\\"permissions\\\":[\\\"https://webcheckout2.coe.uga.edu/webcheckout/wco/\\\",\\\"https://coeoit.coe.uga.edu:47715/*\\\"],\\\"version\\\":\\\"2.1.0\\\",\\\"web_accessible_resources\\\":[\\\"*\\\"],\\\"applications\\\":{\\\"gecko\\\":{\\\"id\\\":\\\"oitloggin@uga.edu\\\"}}}\");\n\n//# sourceURL=webpack:///./extension/manifest.json?");
+module.exports = JSON.parse("{\"content_scripts\":[{\"js\":[\"OneSource/main.js\"],\"matches\":[\"https://selfservice.hprod.onehcm.usg.edu/psp/hprodsssso/HCMSS/HRMS/c/ROLE_EMPLOYEE.TL_WEB_CLOCK.GBL?Page=TL_WEB_CLOCK&Action=U\"],\"run_at\":\"document_end\"},{\"css\":[\"WebCheckout/css/featherlight.css\",\"WebCheckout/css/main.css\"],\"js\":[\"WebCheckout/lib/jquery.js\",\"WebCheckout/lib/featherlight.js\",\"WebCheckout/lib/keymaster.js\",\"WebCheckout/main.build.js\"],\"matches\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco*\"],\"run_at\":\"document_end\"}],\"description\":\"This extension was built to modify OIT Systems that we do not have direct access to.\",\"manifest_version\":2,\"name\":\"OITLogging\",\"permissions\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco/\",\"https://coeoit.coe.uga.edu:47715/*\"],\"version\":\"2.1.0\",\"web_accessible_resources\":[\"*\"],\"applications\":{\"gecko\":{\"id\":\"oitloggin@uga.edu\"}}}");
+
+/***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./extension/manifest.json
+var manifest = __webpack_require__(0);
+
+// CONCATENATED MODULE: ./extension/WebCheckout/constants.js
+/* global chrome, browser */
+
+
+/** Detect which runtime variable to use so that this extension is compatible with chrome, firefox, opera, and safari */
+const IS_CHROME = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+
+/** Selects a runtime variable based on the browser */
+const GLOBAL_RUNTIME = IS_CHROME ? chrome.runtime : browser.runtime;
+
+/**
+ * The host of the webcheckout system. Needed on requestions in firefox due to
+ * https://github.com/greasemonkey/greasemonkey/issues/2680
+ */
+const HOST = "https://webcheckout2.coe.uga.edu";
+
+/** Version of the extension pulled from the manifest */
+const VERSION = manifest.version;
+
+/** Name of the localStorage list used to hold information about when the user has seen */
+const SEEN_LIST = "webcheckout_seen_list";
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/RemovePrefixModule.js
+/**
+ * This module removes the OIT- prefix from any barcode that has it. Etc. "OIT-4455" => "4455"
+ */
+class RemovePrefixModule {
+    _removePrefix () {
+        $(this).val($(this).val().replace(/OIT-/, ''));
+    }  
+    
+    install() {
+        $("#input-barcode, textarea[id^='rapid']").on("keydown", this._removePrefix);
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/util.js
+
+/** Utilities */
+
+// cache resources
+const cache = {};
+    
+const Utility = {
+    /**
+     * Pulls a resource from the local extension.
+     * @param address location of the file to pull
+     * @param templater An object of key value pairs that should correspond to templating tags inside of the resource. This will replace the tag will the value in this templater
+     *          template: <div>${name}</div>
+     *          templater: { "name": "Shawn" }
+     *          results: <div>Shawn</div>
+     * @param cachable Set to true if the resource should only be pulled once and read through a cache all of the other times. This is useful if the resource is static and has no templates.
+     * @returns {Promise<any>}
+     */
+    pullResource:  function pullResource (address, templater, cachable) {
+        return new Promise(function (resolve) {
+            if (cachable) {
+                if (Object.prototype.hasOwnProperty.call(cache, address)) {
+                    resolve(cache[address]);
+                }
+            }
+            $.get(GLOBAL_RUNTIME.getURL(address)).then(function (content) {
+                if (templater) {
+                    for (let el in templater) {
+                        content = content.replace('${' + el + '}', templater[el]);
+                    }
+                }
+                if (cachable) {
+                    cache[address] = content;
+                }
+                resolve(content);
+            });
+        });
+    },
+
+    /**
+     * Opens the featherlight lightbox
+     * @param content the html of the box
+     * @param afterOpen when should happen after the box is opened...this is a good place to attach events within the box
+     * @returns {*|jQuery}
+     */
+    openLightBox: function openLightBox (content, afterOpen) {
+        return $.featherlight(null, {html:content, afterOpen, openSpeed: -200});
+    },
+
+    /**
+     * Checks if an object contains all of the provided key's
+     * @param obj Object to search
+     * @param contains A list of key's to look for
+     * @returns {boolean} true if all of the keys inside of param "contains" is found in param "obj"
+     */
+    objectContainsAll: function objectContainsAll (obj, contains) {
+        for (let contain of contains) {
+            if (!(contain in obj)) return false;
+        }
+        return true;
+    },
+
+    /**
+     * Parses the data string
+     * @param {String:encoded in base64} data An base64 encoded string which when decoded has the format (spaces do not matter): name:value,name2:value2 ....etc
+     * @returns {Object|boolean} object if could be parsed and false if not
+     */
+    parseToDataString: function parseToDataString (data) {
+        try {
+            let unencode = window.atob(data); // decode string
+            let dataPoints = unencode.split(/\s*,\s*/); //split into data points
+            let parsedData = {};
+            for (let dataPoint of dataPoints) { // run through each datapoint
+                let dataComponents = dataPoint.split(/\s*:\s*/); // and split into its components
+                let dataName = dataComponents[0];
+                let dataValue = dataComponents[1];
+                parsedData[dataName] = dataValue;
+            }
+            return parsedData;
+        } catch (e) {
+            return false;
+        }
+    },
+
+    /**
+     * Find the average of an array of numbers
+     * @param numbers
+     * @returns {number}
+     */
+    average: function average (numbers) {
+        if (numbers == null || numbers.length == 0) return 0;
+        let sum = 0;
+        for (let number of numbers) {
+            sum += number;
+        }
+        return sum/numbers.length;
+    },
+    
+    /**
+     * Allows us to create a timeline of requests which contain many frames. For the case of webcheckout, this is nice way
+     * of getting an action done since they require frames of requests
+     * @param  {Array of Objects} frames The frames that will be executed through a post request
+     *      The Objects in the array have the following properties:
+     *          url (String): the request url
+     *          data (Object): the data sent with the url
+     *          feed (Function): a function that has its first parameter set to the results of the current frame. This allows you to further process the results of a frame (see addResources for an example)
+     *          other (Object): any $.ajax properties that you would like to include in this request.
+     *              In order to override being limited to a post request, you must include: other: { method: 'YOUR_DESIRED_METHOD_HERE'}
+     *          stop (Function): Allows you to stop a frame requrest given a certain condition. Return false to continue otherwise return an error message
+     *
+     *      The only required property is url. Any other parameter is added to the frame request and can be accessed inside of the progress method.
+     *
+     * @return {Promise}
+     *
+     *
+     * Special Methods have been attached to the prototype of the Promise that gets returned:
+     *      .progress(function): tracks the progress of the whole frame request..evokes 1 time per frame
+     *          passed to the function will the following variables in parameter order:
+     *              progressData: contains the properties: completed (number of frames done), total (total number of frames), percent (% completed), remaining (time remaining in seconds)
+     *              currentFrame: the data associated with the current frame (this will just be object that you used to define the frame)
+     *      .cancel(): cancels whole frame request
+     *
+     *
+     *
+     * Example:
+     *
+     *      let request = makeFrameRequest([
+     *          {
+     *              url: "/example/request",
+     *              data: {
+     *                  "canDo": true
+     *              },
+     *              other: {
+     *                  method: "GET" // this overrides the nature of using a post request which is the default
+     *              }
+     *              skip: true // we can access this inside of the progress function when we get to this particular frame
+     *          }
+     *      ]);
+     *      request.progress(function (progressData, currentFrame) {
+     *          console.log("Completed: ", progressData.completed);
+     *          console.log("Total: ", progressData.total);
+     *          console.log("Percent: ", progressData.percent, "%");
+     *          console.log("Remaining: ", progressData.remaining, "s");
+     *
+     *          // Note current frame equals the object defined within the makeFrameRequest array
+     *          if (currentFrame.hasOwnProperty('skip') && currentFrame.skip == true) {
+     *              request.cancel();
+     *          }
+     *      });
+     */
+    makeFrameRequest: function makeFrameRequest(frames) {
+        const Utility = this;
+        
+        let cancelled = false;
+        let totalFrames = frames.length;
+        let framesCompleted = 1;
+        let progress = null;
+        let globalTimes = []; // keep track of all of the times
+        let avgTime = Utility.average(globalTimes); // keep track of the average execution time
+
+        let startTime = performance.now();
+        let promise = new Promise(function(resolve, reject) {
+            if (frames.length == 0) { // resolve when all frames have been used
+                resolve();
+            } else {
+                let frame = frames[0]; // get the first frame
+                let additionalData = frame.other || {};
+                let feeder = frame.feed || $.noop;
+                let conditional = frame.stop || (function () {return false;});
+                let conditionalMessage = null;
+                
+                return $.ajax({
+                    method: 'POST',
+                    url: frame.url,
+                    data: Object.prototype.hasOwnProperty.call(frame, 'data') ? frame.data : null,
+                    ...additionalData
+                }).done((resp) => { // run the request
+                    feeder(resp); // feed in the response to another function
+                    
+                    // based on the response of the request we can decide to continue or stop the frames
+                    if (!(conditionalMessage = conditional(resp))) {
+                        frames.shift(); // shift the frames
+
+                        // if the user has cancelled and we aren't on the last frame
+                        if (cancelled && frames.length != 0) {
+                            reject('cancelled');
+                        } else { // else continue making frame requests
+                            if (progress != null && typeof progress == "function") {
+                                let progressData = { // set progress data
+                                    completed: framesCompleted + 1,
+                                    total: totalFrames,
+                                    percent: (framesCompleted + 1) / totalFrames,
+                                    // calculate the time remaining by multiplying the frames left by the average execution time
+                                    remaining: (totalFrames - (framesCompleted + 1)) * avgTime / 1000
+                                };
+                                progress.call(this, progressData, frames[0] != undefined ? frames[0] : null);
+                            }
+
+                            //push the execution time for the purpose of generating an average
+                            globalTimes.push(performance.now() - startTime);
+                            return Utility.makeFrameRequest(frames)
+                                .then(resolve, reject)
+                                .progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests
+                        }
+                    } else {
+                        reject(conditionalMessage);
+                    }
+                }).fail(function () { // if something goes wrong then we will default back to the checkout page
+                    $.post('?method=checkout-jump');
+                    reject('error');
+                });
+            }
+        });
+        
+        Promise.prototype.progress = function (progressFunction, total, completed, times) { // keep track of progress
+            totalFrames = total || frames.length;
+            framesCompleted = completed || 0;
+            progress = progressFunction || $.noop;
+            globalTimes = times || [];
+            avgTime = Utility.average(times);
+        };
+        
+        Promise.prototype.cancel = function () {
+            cancelled = true;
+            $.post('?method=checkout-jump');
+        };
+
+        return promise;
+    },
+    
+    /**
+     * Looks for the allocation ID on the page. In particular, there is an element with id: allocation that has 
+     * a link with this allocation number. In case this link changes, this method will need to be updated.
+     */
+    getAllocationId: function () {
+        if (document.getElementById("allocation") == null) return;
+        let allocationLink = document.getElementById("allocation").getAttribute("href");
+        return allocationLink.match(/allocation=([0-9]+)/)[1];
+    }
+};
+
+// CONCATENATED MODULE: ./extension/WebCheckout/requests.js
+
+
+    
+/** Holds different requests that can be made. */
+let Requests = {
+    /**
+     * All of these requests should be done here through the COE OIT System
+     */
+    CoeOitApi: {
+        findUser: function (userid) {
+            //userid = "6235678118879000";
+            return  new Promise(function (resolve, reject) {
+                $.ajax({
+                    url: "https://coeoit.coe.uga.edu:47715/api/v1/webcheckout/user/" + userid,
+                    type: "GET",
+                    crossDomain: true,
+                    success: function (person) {
+                        resolve(person);
+                    },
+                    error: function () {
+                        const errorMsg = IS_CHROME ? "User does not exist in either systems." :
+                                            "Adding Users is Temporarily Disabled on Firefox";
+                        reject(errorMsg);
+                    }
+                });
+            });
+        }    
+    },
+    /**
+     * Adds a person the WebCheckout database
+     * @param {Array} data A set of data of the person
+     */
+    addPerson: function (data) {
+        return Utility.makeFrameRequest([
+            { url: '?method=new-person-wizard' },
+            { url: '?method=new-userid-forward',
+                data: {
+                    "new-userid-form.userid": data.ugaid,
+                    "new-userid-form.first-name": data.firstname,
+                    "new-userid-form.other-name":  '',
+                    "new-userid-form.last-name": data.lastname,
+                    "new-userid-form.patron-class": data.class,
+                    "new-userid-form.department": data.department
+                },
+                stop: function (resp) {
+                    let foundBar = resp.match(/NOTIFICATION-BAR="" STUFFED-NOTIFICATIONS="(.*)"/);
+                    
+                    // At this point, if there is something wrong with adding the user, an error bar will be
+                    // added to the page. The error bar has a parameter in the HTML called "STUFFED-NOTIFICATIONS"
+                    // which contains a status message in the form on JSON. We will get that JSON, parse it, and
+                    // see if an error has occured. If an error has occured, we will return that message which 
+                    // can then be picked up in the error function parameter of the promise.
+                    if (foundBar) {
+                        try {
+                            let message = foundBar[1].replace(/&quot;/g, '"');
+                            let parsedMessage = JSON.parse(message)[0];
+                            
+                            if (parsedMessage.type == "error") {
+                                return parsedMessage.message;
+                            }
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+            },
+            { url: '?method=new-person-contact-forward',
+                data: {
+                    "new-person-contact-form.street": '',
+                    "new-person-contact-form.street2": '',
+                    "new-person-contact-form.city": '',
+                    "new-person-contact-form.state": '',
+                    "new-person-contact-form.postal-code": '',
+                    "new-person-contact-form.country": '',
+                    "new-person-contact-form.telephone": data.phone,
+                    "new-person-contact-form.email": data.email
+                }
+            },
+            { url: '?method=new-person-create-finish' },
+            { url: '?method=checkout-jump', finishing: true },
+        ]);
+    },
+
+    /**
+     * Find the autocomplete resources
+     * @param  {String} string String to search for an autocompletion
+     * @return {Promise}
+     */
+    autocomplete: {
+        resource: function (string) {
+            return new Promise (function (resolve) {
+                $.ajax({
+                    url: HOST + '/webcheckout/rest/resourceType/autocomplete',
+                    type: "POST",
+                    dataType: "json",
+                    data: `{"string": "${string}", "properties": ["name", "description"]}`,
+                    contentType: "application/json",
+                    headers: {
+                        Accept: "application/json, text/plain, */*"
+                    },
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function (d) {
+                        if (d == null || d.payload == null) resolve([]);
+                        else {
+                            let resources = [];
+                            let results = d.payload;
+
+                            for (let result of results) {
+                                if (result.label == "OIT") {
+                                    for (let value of result.values) {
+                                        resources.push({
+                                            oid: value.oid,
+                                            name: value.name
+                                        });
+                                    }
+                                }
+                            }
+                            resolve(resources);
+                        }
+                    }
+                });
+            });
+        },
+        person: function (id) {
+            return new Promise (function (resolve) {
+                $.ajax({
+                    url: HOST + '/webcheckout/rest/person/Autocomplete',
+                    type: "POST",
+                    dataType: "json",
+                    data: `{"string": "${id}", "limit": 30}`,
+                    contentType: "application/json",
+                    headers: {
+                        Accept: "application/json, text/plain, */*"
+                    },
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function (d) {
+                        if (d == null || d.payload == null) resolve([]);
+                        else {
+                            for (let payload of d.payload) {
+                                if (payload.values != null) {
+                                    resolve(payload.values);
+                                    return;
+                                }
+                            }
+                            resolve([]);
+                        }
+                    },
+                    error: function (d) {
+                        console.error("FAIL", d);
+                    }
+                });
+            });
+        }
+    },
+    
+    setPatron: function (oid) {
+        return new Promise (function (resolve) {
+                $.ajax({
+                    url: HOST + '/webcheckout/wco/api/set-patron',
+                    type: "POST",
+                    data: {
+                        oid: oid,
+                        timeline: true,
+                        allocation: Utility.getAllocationId()
+                    },
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function (d) {
+                        resolve(d.patron);
+                    }
+                });
+            });
+    },
+
+    /**
+     * Adds a set of resources to WebCheckout
+     * @param {Array} resources An array of resources with formate [{ id: 12, type: "oid|type"}, ...]
+     */
+    addResources: function (resources) {
+        // remove 123456,
+        let masterFrame = [];
+        let frameSet = function (id, type, description) {
+            return [
+                { url: '?method=new-resource-wizard' },
+                { url: '?method=choose-resource-id-forward',
+                    data: {
+                        "choose-resource-id-form.resource-id": id,
+                        "choose-resource-id-form.circulating": true
+                    }
+                },
+                { url: '?method=choose-resource-type-forward',
+                    data: {
+                        "choose-resource-type-form.search-field": type
+                    }
+                },
+                { url: '?method=new-resource-wizard-finish',
+                    finishing: true,
+                    feed: function (resp) {
+                        try {
+                            let reg = /\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;
+                            let oid = resp.match(reg)[1];
+                            $.ajax({
+                                url: HOST + '/webcheckout/rest/resource/update',
+                                type: "POST",
+                                dataType: "json",
+                                data: '{"oid": ' + oid + ', "values": {"description": "' + description + '"}}',
+                                contentType: "application/json",
+                                headers: {
+                                    Accept: "application/json, text/plain, */*"
+                                },
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                success: $.noop
+                            });
+                        } catch (e) {
+                            console.error(e);
+                            alert("Oops, Something Went Wrong:" + e);
+                        }
+                    }
+                }
+            ]
+        }
+        for (let resource of resources) {
+            masterFrame = masterFrame.concat(frameSet(resource.id, resource.type, resource.description));
+        }
+        return Utility.makeFrameRequest(masterFrame);
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/ResourceAdderModule.js
+
+
+
+function ResourceAdderModule_console(mess, type) {
+    let classes = type || 'default';
+    document.getElementById('progress-prompt').innerHTML += `<div class='${classes}'>${mess}</div>`;
+    document.getElementById('progress-prompt').scrollTop = document.getElementById('progress-prompt').scrollHeight;
+}
+
+/**
+ * Verifies that all fields have been properly filled out and the finish button can or cant be enabled
+ */
+function checkFinishDisability() {
+    let numberOfInputs = $('.featherlight-inner .content .row .form-control').length;
+    let numberOfCompletedInputs = $('.featherlight-inner .content .row .form-control').filter(function () {
+        return ($(this).hasClass('type') && $(this).hasClass('autocompleted')) || // type field needs to be autocompleted
+            ($(this).hasClass('numbers') && $(this).val().match(/[0-9]{1,}/)) || // numbers field should have at least 1 number
+            ($(this).hasClass('description')) // the description field can optionally be blank
+    }).length;
+
+    $("#finishadding").attr("disabled", !(numberOfInputs == numberOfCompletedInputs));
+}
+
+function redirectToOriginalForm () {
+     document.location = '?method=new-resource-wizard';
+}
+
+function removeResourceRow () {
+    if ($(".featherlight-inner .content").find('.row').length > 1) { // ensure that we can not remove the last remaining row
+        $(this).closest('.row').slideUp(200, function () {
+            $(this).remove();
+            checkFinishDisability();
+        });
+    }
+}
+
+function addResourceRow(inputRow) {
+    $('.featherlight-inner .content').append(inputRow);
+    checkFinishDisability();
+}
+
+function assignAutoCompletedValue () {
+    let oid = $(this).data('oid');
+    let value = $(this).text();
+
+    $(this).parent().prev().data('oid', oid).val(value).addClass('autocompleted');
+    $(this).parent().empty().hide();
+    checkFinishDisability();
+}
+
+function emptyAutoCompleted () {
+    $('.featherlight-inner .autocomplete').empty().hide();
+}
+
+function loadUpAutoCompletedValues () {
+    let value = $(this).val();
+    $(this).removeClass('autocompleted');
+    Requests.autocomplete.resource(value).then((results) => {
+        if ($(this).is(':focus')) { // only show the results if we are still focuses on the input
+            let list = '';
+            for (let result of results) {
+                list += `<li data-oid="${result.oid}">${result.name}</li>`;
+            }
+            $(this).next().html(list)
+            if (list != '') { // if list is not empty
+                $(this).next().show(); // add the list of items
+            } else {
+                $(this).next()
+                    .hide();
+            }
+        }
+    });
+}
+
+function tryAndCompleteAutoCompleteAssignment () {
+    if (!$(this).hasClass('autocompleted')) {
+        let value = $(this).val();
+        Requests.autocomplete.resource(value).then((results) => { // check the current value of the input and see if we can derive an auto completed value anyways
+            if (results.length == 1) { // if the input only gives one autocorrected result then we can use that result to finish the completion
+                let result = results[0];
+                $(this).data('oid', result.oid).val(result.name).addClass('autocompleted');
+            } else {
+                // however, even if we get multiple results, if the input value matches one of the autocompleted ones exactly,
+                // we can choose that one as the autocorrect
+                for (let result of results) {
+                    if (result.name == value) {
+                        $(this).data('oid', result.oid).addClass('autocompleted');
+
+                        break;
+                    }
+                }
+            }
+            checkFinishDisability();
+        });
+    }
+}
+
+async function addAllResources() { // Add Resources
+    // collect together all of the resources from the input
+    let allResources = [];
+
+    $('#finishadding, #addresource').attr('disabled', true);
+    
+    // collect the information from each inputRow
+    $('.featherlight-inner .content .row').each(function () {
+        const row =  $(this);
+        const type = row.find('.type').data('oid') + '|' + row.find('.type').val();
+        const resourceIds = row.find('.numbers').val().split(/\s*,\s*/);
+        const description = row.find('.description').val();
+
+        for (let resourceId of resourceIds) {
+            allResources.push({"id": resourceId, type, description});
+        }
+        row.remove();
+    });
+    
+    // Get the console
+    $('.featherlight-inner .content').html(await Utility.pullResource('WebCheckout/templates/resource_adder/console.html', {}, true));
+
+    // add the resources
+    let req = Requests.addResources(allResources).then(function () {
+        $('#cancel, #finishadding, #addresource').attr('disabled', true);
+        ResourceAdderModule_console('All Resources have been added.', 'success');
+    });
+
+    req.progress(function (prog, frame) { // progress as the resources are added
+        const frameHasFinishingProperty = Object.prototype.hasOwnProperty.call(frame, 'finishing');
+        const cantCancel = (frame != null && frameHasFinishingProperty && frame.finishing == true) || prog.total - prog.completed == 1;
+
+        $('#cancel').attr('disabled', cantCancel);
+
+        switch (prog.completed % 4) {
+            // brackets for each case will prevent the "Unexpected lexical declaration in case block" given 
+            // by eslint. More on that here: https://eslint.org/docs/rules/no-case-declarations
+            case 0: {
+                ResourceAdderModule_console('Resetting resource creator..');
+                break;
+            } 
+            case 1: {
+                const id = frame.data["choose-resource-id-form.resource-id"];
+                ResourceAdderModule_console(`Creating resource  ${id} ..`);
+                break;
+            } 
+            case 2: {
+                const type = frame.data["choose-resource-type-form.search-field"];
+                ResourceAdderModule_console(`Connecting type ${type} ..`);
+                break;
+            }
+            case 3: {
+                ResourceAdderModule_console('Finishing Resource Creation..');
+                break;
+            }
+        }
+
+        let progressBar = $('.featherlight-inner .content .progress-bar');
+
+        if (prog.remaining == 0) {
+            progressBar.parent().prev().hide()
+        } else {
+            progressBar.parent().prev().show().find('strong').text(Math.round(prog.remaining) + ' seconds');
+        }
+        progressBar.attr('aria-valuenow', prog.percent * 100).width(prog.percent * 100 + '%');
+    });
+
+    $("#cancel").off('click').on('click', () => {
+        req.cancel();
+        $('#cancel, #finishadding, #addresource').attr('disabled', true);
+        $('.featherlight-inner .content .progress').hide().parent().prev().hide();
+        ResourceAdderModule_console('Cancelled. Current Resource will be revoked and any pending resources will be ignored.', 'error');
+    });
+}
+
+/**
+ * The ResourceAdderModule modernizes the way that new resources are added into the system. This module is put into 
+ * action when clicking the "New Resource" button under resources.
+ */
+class ResourceAdderModule_ResourceAdderModule {
+    async _openResourceAdder () {
+        const inputRow = await Utility.pullResource('WebCheckout/templates/resource_adder/inputRow.html', {}, true);
+
+        Utility.pullResource('WebCheckout/templates/resource_adder/index.html', { inputRow }, true).then(function (content) {
+            Utility.openLightBox(content, function () {
+                $('#originalform').on('click',  redirectToOriginalForm);
+
+                $('.featherlight-inner')
+                    .on('click', emptyAutoCompleted)
+                    .on('click', '.remove-row', removeResourceRow)
+                    .on('click', '.autocomplete li', assignAutoCompletedValue)
+                    .on('keyup', '.type.form-control', loadUpAutoCompletedValues)
+                    .on('blur', '.type.form-control', tryAndCompleteAutoCompleteAssignment)
+                    .on('keyup change', '.form-control', checkFinishDisability);
+                        
+                // We are passing the input row in so that we do not need to make new
+                // resource calls for each added resource
+                $("#addresource").on('click', addResourceRow.bind(this, inputRow));
+                $("#finishadding").on('click', addAllResources);
+            });
+        });
+    }
+    
+    install() {
+        $('#new-resource-wizard').removeAttr('href').on('click', this._openResourceAdder);
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/PatronSearchModule.js
+
+
+
+// patron timer in order to verify a scan
+let patronTimer;
+
+/**
+ * The PatronSearchModule improves the experience of searching for a patron by linking the search with the OITLogging
+ */
+class PatronSearchModule_PatronSearchModule {
+    async _createPersonWell(persondata) {
+            // skip a spot here since the values start at 1
+            let classes = [
+                'Other', 
+                'Continuing education', 
+                'Undergraduate freshman', 
+                'Undergraduate sophomore', 
+                'Undergraduate junior', 
+                'Undergraduate senior', 
+                'Graduate 1', 
+                'Graduate 2', 
+                'Employee', 
+                'Faculty',
+            ];
+            let formatedNumber = persondata.phone.replace(/([0-9]{3})([0-9]{3})([0-9]{4})/, function (full, $1, $2, $3) {
+                return "(" + $1 + ") " + $2 + "-" + $3;
+            });
+
+            persondata.class = !isNaN(persondata.class) ? classes[persondata.class - 1] : persondata.class;
+            persondata.formatedNumber = formatedNumber;
+            return Utility.pullResource('WebCheckout/templates/new_person/index.html', persondata);
+    }
+    
+    async _findPatronWebCheckout (patronid, found, notfound) {
+        let persons = await Requests.autocomplete.person(patronid);
+        if (persons != null && persons.length == 1) { 
+            found(persons[0]);
+        } else {
+            let multipleEntries = persons != null ? persons.length > 1 : false;
+            notfound(multipleEntries);
+        }
+    }
+    
+    _setWebCheckoutPatron (id) {
+        return Requests.setPatron(id).then(function (patron) {
+            $("#input-patron").css('color', 'black').blur().val(patron.name);
+            $('.patron-info').removeClass('hidden');
+            $(".patron-info-id").text(patron.userid);
+            $(".patron-info-dept").text(" Dept: " + patron.department);
+            $("#input-barcode").focus(); // add focus to input where you scan barcodes so that you do not have to click it 
+ 
+            $.featherlight.close();
+        });
+    }
+
+    _searchPatron(immediate) {
+        let patron = $("#input-patron").val();
+        
+        clearTimeout(patronTimer);
+        
+        if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters
+            $('.patron-info').addClass('hidden');
+            $("#input-patron").css('color', 'black');
+            return;
+        }
+        
+        // if the patron we are searching is being search by number then we need to do a few things
+        if (!isNaN(Number(patron)) && patron.length == 16) {
+            // Historic Context for this line of code:
+            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. 
+            // This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
+            // Any UGA ID Printed after April of 2019, now only displays the 81# while the barcode still scans all 16.
+            // For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
+            // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.
+            patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#
+        }
+            
+        patronTimer = setTimeout(async () => {
+            this._findPatronWebCheckout(patron, (person) => {
+                this._setWebCheckoutPatron(person.oid);
+            }, async (multipleEntries) => {
+                try {
+                    if (multipleEntries) {
+                        throw "Unique identity was unable to be found";
+                    }
+                        
+                    let oitperson = await Requests.CoeOitApi.findUser(patron);
+                    let parsedPerson = Utility.parseToDataString(oitperson.wcoCode);
+                    
+                    $("#input-patron").css("color", "black");
+                
+                    Utility.openLightBox(await this._createPersonWell(parsedPerson), () => {
+                        // add the user
+                        let req = Requests.addPerson(parsedPerson).then(() => { // create the request
+                            $("#person-ticket").parent().prepend('<div class="alert alert-success"><strong>Success!</strong> User has been added!</div>');
+                            $('#person-ticket .progress').hide();
+                            
+                            this._findPatronWebCheckout(patron, function (person) {
+                                this._setWebCheckoutPatron(person.oid);
+                            });
+                        }, (err) => {
+                            $("#person-ticket").parent().prepend(`<div class="alert alert-danger"><strong>Error!</strong> ${err}</div>`);
+                        });
+                        req.progress(function (prog) {
+                            $('#person-ticket .progress-bar').attr('aria-valuenow', prog.percent*100).width(prog.percent*100 + '%');
+                        });
+                    });
+                } catch (message) {
+                    $("#input-patron").css('color', 'red');
+                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text(message)
+                }
+            });
+        }, immediate === true ? 0 : 50);
+    }
+    
+    async _test() {
+        Utility.openLightBox(await this._createPersonWell({
+            ugaid: '811673611',
+            firstname:'Shawn',
+            lastname: 'Holman',
+            class: 3,
+            department: 'EDPA',
+            phone: '9129771472',
+            email: 'smh27299@uga.edu'
+        }), function () {});
+    }
+    
+    install() {
+        $("#input-patron").on("keyup", this._searchPatron.bind(this));
+        
+        // Whenever the operator types in a patron, they can hit enter before this script can have a chance
+        // to autocomplete. When this happens, you are prompted with a box to select a user. Once you select
+        // a user, the follow piece of code just makes the patron name turn back from red to black.
+        $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
+            $("#input-patron").css("color", "black");
+        });
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/KeyboardShortcutsModule.js
+/* global key */
+
+
+/**
+ * The ShortCutModule implements several useful shortcuts to be used across WebCheckout
+ */
+class KeyboardShortcutsModule_KeyboardShortcutsModule { 
+    constructor() {
+        this.activeKeyList = {};
+
+        this.keyToSymbol = {
+            "command": "⌘",
+            "shift": "⇧",
+            "option": "⌥",
+            "alt": "⌥"
+        }  
+    }
+    
+    /**
+     * Sets the prefix to be used inside of the _key method.
+     * @param prefix which should be in the format of "key1+key2+....KeyN" (Note: no + at the end)
+     */
+    _setPrefix(prefix) {
+        this.keyPrefix = prefix + "+";    
+    }
+    
+    /**
+     * This method attaches a key to an event by utilizing the keymaster.js library included in the lib folder.
+     * @param keys Either a single key character ("a") or an array of characters ["a", "b"] to attach a single event
+     * to multiple keys
+     * @param event The event to be triggered on key press
+     *
+     * Note, it is recommended to set the prefix using _setPrefix(), before you attach a set of keys. See: _installRedirects method 
+     * for an example.
+     */
+    _key(keys, event) {
+        if (event == false) {
+            return;
+        }
+        
+        const prefix = this.keyPrefix || "";
+        let keyPressed;
+        
+        if (Array.isArray(keys)) {
+            let combos = keys.reduce((accum, curr) => {
+                    return accum + prefix + curr + ","; 
+            }, "").slice(0, -1);
+            
+            keyPressed = keys[0];
+            key(combos, event.func);
+        } else if (typeof keys === "string") {
+            keyPressed = keys;
+            key(prefix + keyPressed, event.func);
+        }
+        
+        // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.
+        // For example, command+shirt+A would turn into ⌘+⇧+A
+        let shortcutName = (prefix + keyPressed);/*.replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
+            return this.keyToSymbol[m];
+        });*/
+        this.activeKeyList[shortcutName] = event.label;
+    }
+
+    _createMeta(label, func) {
+        return { label, func };
+    }
+    /**
+     * Creates the event listener that will take a user to a new link
+     * @param href Link to go to
+     */
+    _goTo(href, label) {
+        return this._createMeta("Go to " + label, () => {
+            window.location.href = href;
+        });
+    }
+    
+    /**
+     * Creates the event listener that will click on elements
+     * @param element The id that unique identifies the clickable element..if more than one element are found an error will be thrown
+     * @param dynamic specifies whether the element should be regiester on page load (non-dynamic) or should be checked for when the
+     * event it triggered (dynamic)
+     */
+    _clickOn(element, label, dynamic) {
+        if (dynamic == undefined || dynamic == false) {
+            let el = $(element);
+            if (el.length == 1) {
+                return this._createMeta(label, () => el[0].click());
+            } else {
+                if (el.length > 1) {
+                    throw new Error("Can not identify a unique clickable element.");
+                }
+                return false;
+            }
+        }
+        
+        return this._createMeta(label, () => {
+            let el = $(element);
+            if (el.length == 1) {
+               el[0].click(); 
+            }
+            if (el.length > 1) {
+                throw new Error("Can not identify a unique clickable element.");
+            }
+        });
+    }
+    
+    _removeFilter() {
+        // See: https://github.com/madrobby/keymaster#filter-key-presses
+        key.filter = function () {
+            return true;
+        }
+    }
+    
+    _installRedirects() {
+        this._setPrefix("ctrl+shift");
+        
+        // Checkout Page
+        this._key("c", this._goTo("?method=checkout-jump", "Checkout"));
+        // New Reservation Page
+        this._key("r", this._goTo("?method=reservation-jump", "Reservation"));
+        // Reservation Pickup Page
+        this._key("p", this._goTo("?method=find-reservations", "Pickup"));
+        // Find Checkouts Page (aka Rapid Return)
+        this._key("f", this._goTo("?method=find-checkouts", "Find Checkouts"));
+        // Quick Return Page (aka Rapid Return)
+        this._key("q", this._goTo("?method=rapid-return", "Quick Return"));
+    }
+    
+    _installClicks() {
+        this._setPrefix("ctrl+option");
+        // Confirm Checkout Button
+        this._key("c", this._clickOn("button:contains('Confirm Checkout')", "Confirm Checkout", true));
+        
+        this._setPrefix("ctrl");
+        // Commit Button
+        this._key("c", this._clickOn("#commit-button .submit-all", "Checkout")); 
+        // Timeline Scheduler Button (aka. Back to Checkout Button)
+        this._key(["b", "t"], this._clickOn("button:contains('Timeline Scheduler')", "Back to Checkout", true));
+        // Confirm Checkout Button
+        this._key("r", this._clickOn("a:contains('Reset')", "Reset Checkout"));
+        // Return Resource Button
+        this._key("q", this._clickOn("input[value='Return Resource']", "Return Resource", true));
+    }
+    
+    _openShortCutMenu() {
+        let shortcuts = "";
+        
+        for (let shortcut in this.activeKeyList) {
+            shortcuts += "<pre style='border-radius: 0;margin: 0;border: none;background: white;padding: 5px 20px;'>" + shortcut +  "<span style='float:right'>" + this.activeKeyList[shortcut] + "</span></pre>";
+        }
+        
+        Utility.pullResource('WebCheckout/templates/keyboard_shortcuts/index.html', { shortcuts }, true).then(function (content) {
+            Utility.openLightBox(content, function () {});
+        });
+    }
+    
+    install() {
+        this._removeFilter();
+        this._installRedirects();
+        this._installClicks();
+        
+        localStorage.setItem("list", JSON.stringify(this.activeKeyList));
+        $("#statusbar .rightStatusBar").append(`<div class="rightSessionContent" style="margin-right: 5px;"><button class="button" id="openShortcuts">Shortcuts</button></div>`);
+        $("#openShortcuts").on('click', () => {
+            this._openShortCutMenu();
+        })
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/WhatsNewModule.js
+
+
+
+/**
+ * The ShortCutModule implements several useful shortcuts to be used across WebCheckout
+ */
+class WhatsNewModule_WhatsNewModule { 
+    async _openWhatsNew() {
+        const content = await Utility.pullResource(`WebCheckout/templates/whats_new/${VERSION}.html`);
+        
+        Utility.pullResource('WebCheckout/templates/whats_new/index.html', {
+            version: VERSION,
+            text: content
+        }, true).then(function (content) {
+            Utility.openLightBox(content, function () {
+                
+            });
+        });
+    }
+    
+    /** Identifies a logged in user by name (not 100% unique) */
+    _getCurrentUser() {
+        return document.querySelector("#statusbar .rightStatusBar a.sessionContent").innerText.replace(" (operator)", "");
+    }
+    
+    /** Updates the seen list */
+    _setSeenList(to) {
+        localStorage.setItem(SEEN_LIST, JSON.stringify(to));
+    }
+    
+    /** Gets the seen list accounting for if the list is empty */
+    _getSeenList() {
+        const list = localStorage.getItem(SEEN_LIST);
+        if (list == null) {
+            this._setSeenList([]);
+            return [];
+        }
+        return JSON.parse(list);
+    }
+    
+    /** See if a user has seen a version previously */
+    _userHasSeenVersion(check_user, version) {
+        let list = this._getSeenList();
+        
+        for (let user of list) {
+            if (user.name == check_user && user.versionsSeen.includes(version)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /** Set a user to have seen a version */
+    _setSeen(check_user, version) {
+        let list = this._getSeenList();
+        for (let user of list) {
+            if (user.name == check_user) {
+                user.versionsSeen.push(version);
+                this._setSeenList(list);
+                return true;
+            }
+        }
+        
+        list.push({
+            name: check_user,
+            versionsSeen: [version]
+        });
+        this._setSeenList(list);
+    }
+    
+    /** Checks to see if the current user should be shown the whats new box */
+    _userNotSeen() {
+        let user = this._getCurrentUser();
+        
+        if (user != " ()") {
+            return !this._userHasSeenVersion(user, VERSION)
+        }
+        return false;
+    }
+    
+    install() {
+        $("#statusbar .rightStatusBar").append(`<div class="rightSessionContent" style="margin-right: 10px;"><button class="button" id="openWhatsNew">What's New?</button></div>`);
+        $("#openWhatsNew").on('click', () => {
+            this._openWhatsNew();
+            
+            if (this._userNotSeen()) {
+                this._setSeen(this._getCurrentUser(), VERSION);
+                $("#openWhatsNew").removeClass("flash");
+            }
+        });
+        
+        if (this._userNotSeen()) {
+            $("#openWhatsNew").addClass("flash");
+        }
+    }
+}
+// CONCATENATED MODULE: ./extension/WebCheckout/modules/index.js
+
+
+
+
+
+// CONCATENATED MODULE: ./extension/WebCheckout/main.js
+
+
+
+(function main($) {
+    function installModule (module) {
+        const createdModule = new module();
+        if (Object.prototype.hasOwnProperty.call(module, "install")) {
+            let moduleName = module.constructor.name;
+            console.error(`Module "${moduleName}": Could not be installed due to missing install method.`);
+        } else {
+            createdModule.install();  
+        } 
+    }
+
+    $(document).ready(function () {
+        installModule(RemovePrefixModule);
+        installModule(ResourceAdderModule_ResourceAdderModule);
+        installModule(PatronSearchModule_PatronSearchModule);
+        installModule(WhatsNewModule_WhatsNewModule);
+        installModule(KeyboardShortcutsModule_KeyboardShortcutsModule);
+    });
+    
+    // Appends the inject.js script to webpage so that it receives full access to the page.
+    let s = document.createElement('script');
+    s.src = GLOBAL_RUNTIME.getURL('WebCheckout/inject.js');
+    (document.head || document.documentElement).appendChild(s);
+})(jQuery);
 
 /***/ })
-
-/******/ });
+/******/ ]);

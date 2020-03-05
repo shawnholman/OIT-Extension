@@ -4,6 +4,22 @@ This extension serves to provide helper functionalities to our services. Specifi
 ## Support
 This extension has been testing and used for Chrome and Firefox but should work in Opera and Safari likewise.
 
+## Prerequisites 
+In order to develop this extension, you should have some previous knowledge with following this:
+
+- HTML
+- CSS (including bootstrap)
+- JavaScript (version: es6, libraries: jQuery) 
+- Webpack
+- Node.js 
+    - Node Package Manager
+    - package.json
+    - node_nodes
+- Developing Extensions
+- Bash Files (.sh)
+
+If you are not familiar with these, you can still develop this extension! Just know, that there w
+
 ## First-time Instructions
 Before you clone this repository, make sure that the computer that you intend to clone the repository is has an SSH Key associated with the account. Go ahead and set this up if you sure that you do not have this setup or if you are unsure if it already is or not. You can find instructions below under the section called "SSH Authentication".
 
@@ -47,6 +63,8 @@ Once the module has been added to module folder, and it has been added to the in
 A good example to look at would be the RemovePrefixModule. The module is defined in the "module" folder as "RemovePrefixModule.js", has an entry in the index.js file, follows the minimum class structure, and is also installed into the extension inside of main.js
 
 **Note: The reason why we include each module into the index.js file that resides in the module folder has to do with the way WebPack does importing and exporting. By exporting each module inside of this index file, we are able to import all modules at once by just using the address to the module folder. You can see this being used inside of the main.js**
+
+An additional thing to note is that you should only have one public method. All methods that you wan't to specify as private should be preceeded by an underscore. Though, JavaScript does not have a notion of public/private variables, this will help keep the API clear.
 
 ### Libraries
 All external libraries should be added into the "lib" folder and then included into the manifest.js file with the other library files. The library file should be listed before "WebCheckout/main.build.js" in this manifest file. No other steps are required to get the library working and can not be used within the WebCheckout section of the extension. Add it into the OneSource part of the manifest file if you need it there as well.

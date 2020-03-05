@@ -1,10 +1,10 @@
-import {GLOBAL_RUNTIME} from './constants.js';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const constants_js_1 = require("./constants.js");
 /** Utilities */
-
 // cache resources
 const cache = {};
-    
-export const Utility = {
+exports.Utility = {
     /**
      * Pulls a resource from the local extension.
      * @param address location of the file to pull
@@ -15,14 +15,14 @@ export const Utility = {
      * @param cachable Set to true if the resource should only be pulled once and read through a cache all of the other times. This is useful if the resource is static and has no templates.
      * @returns {Promise<any>}
      */
-    pullResource:  function pullResource (address, templater, cachable) {
+    pullResource: function pullResource(address, templater, cachable) {
         return new Promise(function (resolve) {
             if (cachable) {
                 if (Object.prototype.hasOwnProperty.call(cache, address)) {
                     resolve(cache[address]);
                 }
             }
-            $.get(GLOBAL_RUNTIME.getURL(address)).then(function (content) {
+            $.get(constants_js_1.GLOBAL_RUNTIME.getURL(address)).then(function (content) {
                 if (templater) {
                     for (let el in templater) {
                         content = content.replace('${' + el + '}', templater[el]);
@@ -35,36 +35,34 @@ export const Utility = {
             });
         });
     },
-
     /**
      * Opens the featherlight lightbox
      * @param content the html of the box
      * @param afterOpen when should happen after the box is opened...this is a good place to attach events within the box
      * @returns {*|jQuery}
      */
-    openLightBox: function openLightBox (content, afterOpen) {
-        return $.featherlight(null, {html:content, afterOpen, openSpeed: -200});
+    openLightBox: function openLightBox(content, afterOpen) {
+        return $.featherlight(null, { html: content, afterOpen, openSpeed: -200 });
     },
-
     /**
      * Checks if an object contains all of the provided key's
      * @param obj Object to search
      * @param contains A list of key's to look for
      * @returns {boolean} true if all of the keys inside of param "contains" is found in param "obj"
      */
-    objectContainsAll: function objectContainsAll (obj, contains) {
+    objectContainsAll: function objectContainsAll(obj, contains) {
         for (let contain of contains) {
-            if (!(contain in obj)) return false;
+            if (!(contain in obj))
+                return false;
         }
         return true;
     },
-
     /**
      * Parses the data string
      * @param {String:encoded in base64} data An base64 encoded string which when decoded has the format (spaces do not matter): name:value,name2:value2 ....etc
      * @returns {Object|boolean} object if could be parsed and false if not
      */
-    parseToDataString: function parseToDataString (data) {
+    parseToDataString: function parseToDataString(data) {
         try {
             let unencode = window.atob(data); // decode string
             let dataPoints = unencode.split(/\s*,\s*/); //split into data points
@@ -76,25 +74,25 @@ export const Utility = {
                 parsedData[dataName] = dataValue;
             }
             return parsedData;
-        } catch (e) {
+        }
+        catch (e) {
             return false;
         }
     },
-
     /**
      * Find the average of an array of numbers
      * @param numbers
      * @returns {number}
      */
-    average: function average (numbers) {
-        if (numbers == null || numbers.length == 0) return 0;
+    average: function average(numbers) {
+        if (numbers == null || numbers.length == 0)
+            return 0;
         let sum = 0;
         for (let number of numbers) {
             sum += number;
         }
-        return sum/numbers.length;
+        return sum / numbers.length;
     },
-    
     /**
      * Allows us to create a timeline of requests which contain many frames. For the case of webcheckout, this is nice way
      * of getting an action done since they require frames of requests
@@ -149,43 +147,35 @@ export const Utility = {
      */
     makeFrameRequest: function makeFrameRequest(frames) {
         const Utility = this;
-        
         let cancelled = false;
         let totalFrames = frames.length;
         let framesCompleted = 1;
         let progress = null;
         let globalTimes = []; // keep track of all of the times
         let avgTime = Utility.average(globalTimes); // keep track of the average execution time
-
         let startTime = performance.now();
-        let promise = new Promise(function(resolve, reject) {
+        let promise = new Promise(function (resolve, reject) {
             if (frames.length == 0) { // resolve when all frames have been used
                 resolve();
-            } else {
+            }
+            else {
                 let frame = frames[0]; // get the first frame
                 let additionalData = frame.other || {};
                 let feeder = frame.feed || $.noop;
-                let conditional = frame.stop || (function () {return false;});
+                let conditional = frame.stop || (function () { return false; });
                 let conditionalMessage = null;
-                
-                return $.ajax({
-                    method: 'POST',
-                    url: frame.url,
-                    data: Object.prototype.hasOwnProperty.call(frame, 'data') ? frame.data : null,
-                    ...additionalData
-                }).done((resp) => { // run the request
+                return $.ajax(Object.assign({ method: 'POST', url: frame.url, data: Object.prototype.hasOwnProperty.call(frame, 'data') ? frame.data : null }, additionalData)).done((resp) => {
                     feeder(resp); // feed in the response to another function
-                    
                     // based on the response of the request we can decide to continue or stop the frames
                     if (!(conditionalMessage = conditional(resp))) {
                         frames.shift(); // shift the frames
-
                         // if the user has cancelled and we aren't on the last frame
                         if (cancelled && frames.length != 0) {
                             reject('cancelled');
-                        } else { // else continue making frame requests
+                        }
+                        else { // else continue making frame requests
                             if (progress != null && typeof progress == "function") {
-                                let progressData = { // set progress data
+                                let progressData = {
                                     completed: framesCompleted + 1,
                                     total: totalFrames,
                                     percent: (framesCompleted + 1) / totalFrames,
@@ -194,45 +184,42 @@ export const Utility = {
                                 };
                                 progress.call(this, progressData, frames[0] != undefined ? frames[0] : null);
                             }
-
                             //push the execution time for the purpose of generating an average
                             globalTimes.push(performance.now() - startTime);
                             return Utility.makeFrameRequest(frames)
                                 .then(resolve, reject)
                                 .progress(progress, totalFrames, ++framesCompleted, globalTimes); // we run the requests
                         }
-                    } else {
+                    }
+                    else {
                         reject(conditionalMessage);
                     }
-                }).fail(function () { // if something goes wrong then we will default back to the checkout page
+                }).fail(function () {
                     $.post('?method=checkout-jump');
                     reject('error');
                 });
             }
         });
-        
-        Promise.prototype.progress = function (progressFunction, total, completed, times) { // keep track of progress
+        Promise.prototype.progress = function (progressFunction, total, completed, times) {
             totalFrames = total || frames.length;
             framesCompleted = completed || 0;
             progress = progressFunction || $.noop;
             globalTimes = times || [];
             avgTime = Utility.average(times);
         };
-        
         Promise.prototype.cancel = function () {
             cancelled = true;
             $.post('?method=checkout-jump');
         };
-
         return promise;
     },
-    
     /**
-     * Looks for the allocation ID on the page. In particular, there is an element with id: allocation that has 
+     * Looks for the allocation ID on the page. In particular, there is an element with id: allocation that has
      * a link with this allocation number. In case this link changes, this method will need to be updated.
      */
     getAllocationId: function () {
-        if (document.getElementById("allocation") == null) return;
+        if (document.getElementById("allocation") == null)
+            return;
         let allocationLink = document.getElementById("allocation").getAttribute("href");
         return allocationLink.match(/allocation=([0-9]+)/)[1];
     }

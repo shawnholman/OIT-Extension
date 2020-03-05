@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es2015",
+    "outDir": "./extension/WebCheckout/out",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "alwaysStrict": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false, // ignore unused locals
+    "noUnusedParameters": false, // ignore unused parameters
+    "pretty": true,
+    "strictNullChecks": true,
+    "sourceMap": false
+  },
+  "include": [
+    "./extension/WebCheckout/main.build.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -124,25 +124,32 @@ async function addAllResources() { // Add Resources
     });
 
     req.progress(function (prog, frame) { // progress as the resources are added
-        const cantCancel = (frame != null && frame.hasOwnProperty('finishing') && frame.finishing == true) || prog.total - prog.completed == 1;
+        const frameHasFinishingProperty = Object.prototype.hasOwnProperty.call(frame, 'finishing');
+        const cantCancel = (frame != null && frameHasFinishingProperty && frame.finishing == true) || prog.total - prog.completed == 1;
 
         $('#cancel').attr('disabled', cantCancel);
 
         switch (prog.completed % 4) {
-            case 0:
+            // brackets for each case will prevent the "Unexpected lexical declaration in case block" given 
+            // by eslint. More on that here: https://eslint.org/docs/rules/no-case-declarations
+            case 0: {
                 console('Resetting resource creator..');
                 break;
-            case 1:
+            } 
+            case 1: {
                 const id = frame.data["choose-resource-id-form.resource-id"];
                 console(`Creating resource  ${id} ..`);
                 break;
-            case 2:
+            } 
+            case 2: {
                 const type = frame.data["choose-resource-type-form.search-field"];
                 console(`Connecting type ${type} ..`);
                 break;
-            case 3:
+            }
+            case 3: {
                 console('Finishing Resource Creation..');
                 break;
+            }
         }
 
         let progressBar = $('.featherlight-inner .content .progress-bar');

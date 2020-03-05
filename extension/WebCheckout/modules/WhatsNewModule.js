@@ -1,8 +1,6 @@
 import {Utility} from '../util.js';
-import {VERSION} from '../constants.js';
+import {SEEN_LIST, VERSION} from '../constants.js';
 
-/** Version of the most up to date version that should be in the what's new */
-const SEEN_LIST = "webcheckout_seen_list";
 /**
  * The ShortCutModule implements several useful shortcuts to be used across WebCheckout
  */
