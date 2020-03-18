@@ -53,11 +53,8 @@ export class KeyboardShortcutsModule {
             key(prefix + keyPressed, event.func);
         }
         
-        // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.
-        // For example, command+shirt+A would turn into ⌘+⇧+A
-        let shortcutName = (prefix + keyPressed);/*.replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
-            return this.keyToSymbol[m];
-        });*/
+        // Create a shortcut name for the activeKeyList entry. 
+        let shortcutName = (prefix + keyPressed);
         this.activeKeyList[shortcutName] = event.label;
     }
 

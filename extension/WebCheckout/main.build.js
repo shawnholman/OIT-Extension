@@ -88,7 +88,7 @@
 /* 0 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"content_scripts\":[{\"js\":[\"OneSource/main.js\"],\"matches\":[\"https://selfservice.hprod.onehcm.usg.edu/psp/hprodsssso/HCMSS/HRMS/c/ROLE_EMPLOYEE.TL_WEB_CLOCK.GBL?Page=TL_WEB_CLOCK&Action=U\"],\"run_at\":\"document_end\"},{\"css\":[\"WebCheckout/css/featherlight.css\",\"WebCheckout/css/main.css\"],\"js\":[\"WebCheckout/lib/jquery.js\",\"WebCheckout/lib/featherlight.js\",\"WebCheckout/lib/keymaster.js\",\"WebCheckout/main.build.js\"],\"matches\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco*\"],\"run_at\":\"document_end\"}],\"description\":\"This extension was built to modify OIT Systems that we do not have direct access to.\",\"manifest_version\":2,\"name\":\"OITLogging\",\"permissions\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco/\",\"https://coeoit.coe.uga.edu:47715/*\"],\"version\":\"2.1.0\",\"web_accessible_resources\":[\"*\"],\"applications\":{\"gecko\":{\"id\":\"oitloggin@uga.edu\"}}}");
+module.exports = JSON.parse("{\"content_scripts\":[{\"js\":[\"OneSource/main.js\"],\"matches\":[\"https://selfservice.hprod.onehcm.usg.edu/psp/hprodsssso/HCMSS/HRMS/c/ROLE_EMPLOYEE.TL_WEB_CLOCK.GBL?Page=TL_WEB_CLOCK&Action=U\"],\"run_at\":\"document_end\"},{\"css\":[\"WebCheckout/css/featherlight.css\",\"WebCheckout/css/main.css\"],\"js\":[\"WebCheckout/lib/jquery.js\",\"WebCheckout/lib/featherlight.js\",\"WebCheckout/lib/keymaster.js\",\"WebCheckout/main.build.js\"],\"matches\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco*\"],\"run_at\":\"document_end\"}],\"description\":\"This extension was built to modify OIT Systems that we do not have direct access to.\",\"manifest_version\":2,\"name\":\"OITLogging\",\"permissions\":[\"https://webcheckout2.coe.uga.edu/webcheckout/wco/\",\"https://coeoit.coe.uga.edu:47715/*\"],\"version\":\"2.1.1\",\"web_accessible_resources\":[\"*\"],\"applications\":{\"gecko\":{\"id\":\"oitloggin@uga.edu\"}}}");
 
 /***/ }),
 /* 1 */
@@ -914,7 +914,7 @@ class PatronSearchModule_PatronSearchModule {
                             $("#person-ticket").parent().prepend('<div class="alert alert-success"><strong>Success!</strong> User has been added!</div>');
                             $('#person-ticket .progress').hide();
                             
-                            this._findPatronWebCheckout(patron, function (person) {
+                            this._findPatronWebCheckout(patron, (person) => {
                                 this._setWebCheckoutPatron(person.oid);
                             });
                         }, (err) => {
@@ -1011,11 +1011,8 @@ class KeyboardShortcutsModule_KeyboardShortcutsModule {
             key(prefix + keyPressed, event.func);
         }
         
-        // Create a shortcut name for the activeKeyList entry. It will replace the word of the key with their symbol.
-        // For example, command+shirt+A would turn into ⌘+⇧+A
-        let shortcutName = (prefix + keyPressed);/*.replace(new RegExp(Object.keys(this.keyToSymbol).join("|"), "g"), (m) => {
-            return this.keyToSymbol[m];
-        });*/
+        // Create a shortcut name for the activeKeyList entry. 
+        let shortcutName = (prefix + keyPressed);
         this.activeKeyList[shortcutName] = event.label;
     }
 

@@ -80,6 +80,15 @@ This JavaScript file is special and necessary for some of the features that were
 
 Certain features that the extension provides, requires the access of variables that are created by WebCheckout itself. The only way we can access them is by using a special script to inject one of our extensions JavaScript files directly into the Webpage enabling us to use the WebCheckout variables. As you can see, inside of the inject.js, the variable that we are currently interested in is called "WCOForm". inject.js is heavily commented to mitigate any confusion regarding the purpose of this file and the difference between it and the other stray JavaScript files. 
 
+## Linter
+In order ensure best practices when writing code and preventing any easy to spot mistakes, we use ESLint to provide a first line of defense for any bugs. You can call the linter by running from the home directory. 
+
+```
+./node_modules/.bin/eslint extension/
+```
+
+The linter is ran automatically before each compression. For more information on the linter, visit https://eslint.org/
+
 ## Testing Locally 
 In order to test the extensions, upload a local copy of the extension to your browser. 
 
