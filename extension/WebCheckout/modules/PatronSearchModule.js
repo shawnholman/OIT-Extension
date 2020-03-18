@@ -48,7 +48,7 @@ export class PatronSearchModule {
             $(".patron-info-id").text(patron.userid);
             $(".patron-info-dept").text(" Dept: " + patron.department);
             $("#input-barcode").focus(); // add focus to input where you scan barcodes so that you do not have to click it 
- 
+            $('.messages').html('<div class="message-error">No resources or resource types selected.</div>');
             $.featherlight.close();
         });
     }

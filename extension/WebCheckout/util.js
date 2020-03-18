@@ -42,8 +42,8 @@ export const Utility = {
      * @param afterOpen when should happen after the box is opened...this is a good place to attach events within the box
      * @returns {*|jQuery}
      */
-    openLightBox: function openLightBox (content, afterOpen) {
-        return $.featherlight(null, {html:content, afterOpen, openSpeed: -200});
+    openLightBox: function openLightBox (content, afterOpen, otherOptions = {}) {
+        return $.featherlight(null, {html:content, afterOpen, fadeInOnly: true, openSpeed: 100, ...otherOptions});
     },
 
     /**

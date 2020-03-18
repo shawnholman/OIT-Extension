@@ -72,6 +72,8 @@ setTimeout(function() {
     //  - Why are you making these changes? 
     //  - What modifications did you have to make
     if (typeof WCOForm !== "undefined") {
+        // Prevent the reset button from showing a dialog
+        window.confirm = function() { return true; };
         /**
          * Overrides the _addBarcodeResource method. 
          * 

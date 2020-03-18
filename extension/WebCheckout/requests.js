@@ -83,6 +83,16 @@ export let Requests = {
     },
 
     /**
+     * Commit and confirm an allocation
+     */
+    completeCheckout: function (allocationNumber) {
+        return Utility.makeFrameRequest([
+            { url: "?method=timeline-confirm-allocation"},
+            { url: "?method=cf-confirm-allocation&allocation=" + allocationNumber },
+            { url: '?method=checkout-jump', finishing: true },
+        ]);
+    },
+    /**
      * Find the autocomplete resources
      * @param  {String} string String to search for an autocompletion
      * @return {Promise}

@@ -1,5 +1,5 @@
 import {GLOBAL_RUNTIME} from './constants.js';
-import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardShortcutsModule, WhatsNewModule} from './modules';
+import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardShortcutsModule, WhatsNewModule, CommitModule} from './modules';
 
 (function main($) {
     function installModule (module) {
@@ -18,6 +18,7 @@ import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardSho
         installModule(PatronSearchModule);
         installModule(WhatsNewModule);
         installModule(KeyboardShortcutsModule);
+        installModule(CommitModule);
     });
     
     // Appends the inject.js script to webpage so that it receives full access to the page.
