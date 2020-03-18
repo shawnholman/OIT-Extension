@@ -10,6 +10,7 @@ export class CommitModule {
         let content = await Utility.pullResource('WebCheckout/templates/commit_confirm/commit-error.html', {errors: errorList});
         Utility.openLightBox(content, function () {}); 
     }
+    
     async _checkout(allocationId) {
         if ($('.messages .message-error').length > 0) {
             this._showErrorBox();
