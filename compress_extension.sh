@@ -1,5 +1,5 @@
 # Get the current version of the extension inside of the manifest file
-CURRENT_EXTENSION_VERSION=$(cat ./extension/manifest.json | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["version"]')
+CURRENT_EXTENSION_VERSION=$(cat ./extension/manifest.json | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])")
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
