@@ -47,8 +47,10 @@ setTimeout(function() {
     
     /** Called once the document is ready */
     const ready = function () {
-        // Extend the resource return time by 1 week
-        Utility.extendDate(1);
+        // Extend the resource return time
+        if ($("[ng-click='applyDefaultReturnTime()']").length) {
+            $("[ng-click='applyDefaultReturnTime()']")[0].click();
+        }
     };
     
     // Everything inside of this if statement will be used to motify the prototype of WCOForm.
