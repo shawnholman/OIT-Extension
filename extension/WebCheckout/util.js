@@ -232,8 +232,6 @@ export const Utility = {
      * a link with this allocation number. In case this link changes, this method will need to be updated.
      */
     getAllocationId: function () {
-        if (document.getElementById("allocation") == null) return;
-        let allocationLink = document.getElementById("allocation").getAttribute("href");
-        return allocationLink.match(/allocation=([0-9]+)/)[1];
+        return parseInt($("[allocation-oid]").attr("allocation-oid"));
     }
 };
