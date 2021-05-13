@@ -3,7 +3,10 @@
  */
 export class RemovePrefixModule {
     _removePrefix () {
-        $(this).val($(this).val().trim().replace(/^OIT-/, ''));
+        const input = $(this).val().trim();
+        if (input.match(/^OIT-/) !== null) {
+            $(this).val(input.replace(/^OIT-/, ''));
+        }
     }  
     
     install() {
