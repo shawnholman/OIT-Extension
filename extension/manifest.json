@@ -6,18 +6,16 @@
    }, {
       "css": [ "WebCheckout/css/featherlight.css", "WebCheckout/css/main.css" ],
       "js": [ "WebCheckout/lib/jquery.js", "WebCheckout/lib/featherlight.js", "WebCheckout/lib/keymaster.js", "WebCheckout/main.build.js" ],
-      "matches": [ "https://webcheckout2.coe.uga.edu/webcheckout/wco*" ],
+      "matches": [
+        "https://webcheckout2.coe.uga.edu/webcheckout/wco*",
+        "https://webcheckout.coe.uga.edu/wco*"
+      ],
       "run_at": "document_end"
    } ],
    "description": "This extension was built to modify OIT Systems that we do not have direct access to.",
    "manifest_version": 2,
    "name": "OITLogging",
    "permissions": ["https://webcheckout2.coe.uga.edu/webcheckout/wco/", "https://coeoit.coe.uga.edu:47715/*"],
-   "version": "2.1.1",
-   "web_accessible_resources": [ "*" ],
-    "applications": {
-      "gecko": {
-        "id": "oitloggin@uga.edu"
-      }
-    }
+   "version": "2.2.1",
+   "web_accessible_resources": [ "*" ]
 }

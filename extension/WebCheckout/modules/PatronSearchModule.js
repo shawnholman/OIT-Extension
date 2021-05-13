@@ -4,6 +4,15 @@ import {Requests} from '../requests.js';
 // patron timer in order to verify a scan
 let patronTimer;
 
+const elements = {
+    // The input to find patrons on the checkout page.
+    patronSearchInput: "#nameInput .autocomplete-input",
+    // The input to find resources on the checkout page.
+    resourceSearchInput: "#resourceInput .autocomplete-input",
+    //
+    patronProperties: ".personProperties"
+}
+
 /**
  * The PatronSearchModule improves the experience of searching for a patron by linking the search with the OITLogging
  */
@@ -43,24 +52,24 @@ export class PatronSearchModule {
     
     _setWebCheckoutPatron (id) {
         return Requests.setPatron(id).then(function (patron) {
-            $("#input-patron").css('color', 'black').blur().val(patron.name);
-            $('.patron-info').removeClass('hidden');
-            $(".patron-info-id").text(patron.userid);
-            $(".patron-info-dept").text(" Dept: " + patron.department);
-            $("#input-barcode").focus(); // add focus to input where you scan barcodes so that you do not have to click it 
+            $(elements.patronSearchInput).css('color', 'black').blur().val(patron.name);
+            //$('.patron-info').removeClass('hidden');
+            //$(".patron-info-id").text(patron.userid);
+            //$(".patron-info-dept").text(" Dept: " + patron.department);
+            $(elements.resourceSearchInput).focus(); // add focus to input where you scan barcodes so that you do not have to click it
             $('.messages').html('<div class="message-error">No resources or resource types selected.</div>');
             $.featherlight.close();
         });
     }
 
     _searchPatron(immediate) {
-        let patron = $("#input-patron").val();
+        let patron = $(elements.patronSearchInput).val();
         
         clearTimeout(patronTimer);
         
         if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters
-            $('.patron-info').addClass('hidden');
-            $("#input-patron").css('color', 'black');
+            $(elements.patronProperties).addClass('hidden');
+            $(elements.patronSearchInput).css('color', 'black');
             return;
         }
         
@@ -87,7 +96,7 @@ export class PatronSearchModule {
                     let oitperson = await Requests.CoeOitApi.findUser(patron);
                     let parsedPerson = Utility.parseToDataString(oitperson.wcoCode);
                     
-                    $("#input-patron").css("color", "black");
+                    $(elements.patronSearchInput).css("color", "black");
                 
                     Utility.openLightBox(await this._createPersonWell(parsedPerson), () => {
                         // add the user
@@ -106,8 +115,8 @@ export class PatronSearchModule {
                         });
                     });
                 } catch (message) {
-                    $("#input-patron").css('color', 'red');
-                    $('.patron-info').removeClass('hidden').find('.patron-info-id').text(message)
+                    $(elements.patronSearchInput).css('color', 'red');
+                    $(elements.patronProperties).removeClass('hidden').find('.patron-info-id').text(message)
                 }
             });
         }, immediate === true ? 0 : 50);
@@ -126,13 +135,13 @@ export class PatronSearchModule {
     }
     
     install() {
-        $("#input-patron").on("keyup", this._searchPatron.bind(this));
-        
+        $(elements.patronSearchInput).on("keyup", this._searchPatron.bind(this));
+
         // Whenever the operator types in a patron, they can hit enter before this script can have a chance
         // to autocomplete. When this happens, you are prompted with a box to select a user. Once you select
         // a user, the follow piece of code just makes the patron name turn back from red to black.
         $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
-            $("#input-patron").css("color", "black");
+            $(elements.patronSearchInput).css("color", "black");
         });
     }
 }

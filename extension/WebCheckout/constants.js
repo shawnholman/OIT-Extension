@@ -11,7 +11,7 @@ export const GLOBAL_RUNTIME = IS_CHROME ? chrome.runtime : browser.runtime;
  * The host of the webcheckout system. Needed on requestions in firefox due to
  * https://github.com/greasemonkey/greasemonkey/issues/2680
  */
-export const HOST = "https://webcheckout2.coe.uga.edu";
+export const HOST = "https://webcheckout.coe.uga.edu";
 
 /** Version of the extension pulled from the manifest */
 export const VERSION = manifest.version;

@@ -1,6 +1,6 @@
 import {Utility} from './util.js';
 import {IS_CHROME, HOST} from './constants.js';
-    
+
 /** Holds different requests that can be made. */
 export let Requests = {
     /**
@@ -137,10 +137,41 @@ export let Requests = {
         person: function (id) {
             return new Promise (function (resolve) {
                 $.ajax({
-                    url: HOST + '/webcheckout/rest/person/Autocomplete',
+                    url: HOST + '/rest/person/search',
                     type: "POST",
                     dataType: "json",
-                    data: `{"string": "${id}", "limit": 30}`,
+                    data: JSON.stringify({
+                      multiQuery: [
+                          {
+                              query: {
+                                  and: {
+                                      status: "ACTIVE",
+                                      name: id,
+                                  }
+                              },
+                              limit: 20, orderBy: "sortableName"
+                          },
+                          {
+                              query: {
+                                  and: {
+                                      status: "ACTIVE",
+                                      barcode: id,
+                                  }
+                              },
+                              limit: 20,
+                              orderBy: "sortableName"
+                          },
+                          {
+                              query: {
+                                  and: {
+                                      status: "ACTIVE",
+                                      useridSubstring: id,
+                                  }
+                              },
+                              limit: 20, orderBy: "sortableName"
+                          },
+                      ]
+                    }),
                     contentType: "application/json",
                     headers: {
                         Accept: "application/json, text/plain, */*"
@@ -151,13 +182,12 @@ export let Requests = {
                     success: function (d) {
                         if (d == null || d.payload == null) resolve([]);
                         else {
-                            for (let payload of d.payload) {
-                                if (payload.values != null) {
-                                    resolve(payload.values);
-                                    return;
-                                }
-                            }
-                            resolve([]);
+                            const results = [
+                                ...d.payload[0].result,
+                                ...d.payload[1].result,
+                                ...d.payload[2].result,
+                            ];
+                            resolve(results);
                         }
                     },
                     error: function (d) {
@@ -167,22 +197,31 @@ export let Requests = {
             });
         }
     },
+
     
     setPatron: function (oid) {
         return new Promise (function (resolve) {
                 $.ajax({
-                    url: HOST + '/webcheckout/wco/api/set-patron',
+                    url: HOST + '/rest/allocation/update',
                     type: "POST",
-                    data: {
-                        oid: oid,
-                        timeline: true,
-                        allocation: Utility.getAllocationId()
+                    data: JSON.stringify({
+                        oid: Utility.getAllocationId(),
+                        values: {
+                            patron:{
+                                _class:"person", oid:oid,
+                            },
+                        },
+                        properties: [{"property":"patron","subProperties":["lastName"]},"name","state","location","items","note","allocationContentsSummary","originalAgent","pickupOption","defaultStartTime","defaultEndTime","deliverToLocation","itemNames","requiresApproval","itemCount","pendingApproval","patronEditable","repeatGroups","deliverToString","deliveryLocationName","editing","endTime","startTime","realStartTime","pickupTime","returnTime","stored","action","patronChangable"],
+                    }),
+                    contentType: "application/json",
+                    headers: {
+                        Accept: "application/json, text/plain, */*"
                     },
                     xhrFields: {
                         withCredentials: true
                     },
                     success: function (d) {
-                        resolve(d.patron);
+                        resolve(d.payload.patron);
                     }
                 });
             });
