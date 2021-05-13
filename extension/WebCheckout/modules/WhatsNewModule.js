@@ -79,7 +79,7 @@ export class WhatsNewModule {
     }
     
     install() {
-        $("#statusbar .rightStatusBar").prepend(`<div style="float:left;"><button class="btn font-weight-bold margin-bottom-5" id="openWhatsNew">What's New?</button></div>`);
+        $("#statusbar .rightStatusBar").prepend(`<div style="float:left;"><button class="btn font-weight-bold margin-bottom-5" style="box-shadow: none;border: 1px solid white;" id="openWhatsNew">What's New?</button></div>`);
         $("#openWhatsNew").on('click', () => {
             this._openWhatsNew();
             

@@ -157,7 +157,7 @@ export class KeyboardShortcutsModule {
         this._installClicks();
         
         localStorage.setItem("list", JSON.stringify(this.activeKeyList));
-        $("#statusbar .rightStatusBar").prepend(`<div style="float:left;"><button class="btn font-weight-bold margin-bottom-5" id="openShortcuts">Shortcuts</button></div>`);
+        $("#statusbar .rightStatusBar").prepend(`<div style="float:left;"><button class="btn font-weight-bold margin-bottom-5" id="openShortcuts" style="box-shadow: none;border: 1px solid white;">Shortcuts</button></div>`);
         $("#openShortcuts").on('click', () => {
             this._openShortCutMenu();
         })
