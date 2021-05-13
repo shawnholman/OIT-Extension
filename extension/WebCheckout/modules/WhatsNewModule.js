@@ -20,7 +20,7 @@ export class WhatsNewModule {
     
     /** Identifies a logged in user by name (not 100% unique) */
     _getCurrentUser() {
-        return document.querySelector("#statusbar .rightStatusBar a.sessionContent").innerText.replace(" (operator)", "");
+        return $("#show-last-detail-page").text().substr(7);
     }
     
     /** Updates the seen list */
@@ -79,7 +79,7 @@ export class WhatsNewModule {
     }
     
     install() {
-        $("#statusbar .rightStatusBar").append(`<div class="rightSessionContent" style="margin-right: 10px;"><button class="button" id="openWhatsNew">What's New?</button></div>`);
+        $("#statusbar .rightStatusBar").prepend(`<div style="float:left;"><button class="btn font-weight-bold margin-bottom-5" id="openWhatsNew">What's New?</button></div>`);
         $("#openWhatsNew").on('click', () => {
             this._openWhatsNew();
             
@@ -88,7 +88,7 @@ export class WhatsNewModule {
                 $("#openWhatsNew").removeClass("flash");
             }
         });
-        
+
         if (this._userNotSeen()) {
             $("#openWhatsNew").addClass("flash");
         }
