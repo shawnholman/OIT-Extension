@@ -12,7 +12,7 @@ import {RemovePrefixModule, ResourceAdderModule, PatronSearchModule, KeyboardSho
         } 
     }
 
-    $(document).ready(function () {
+    $(window).on('load', function () {
         installModule(RemovePrefixModule);
         installModule(ResourceAdderModule);
         installModule(PatronSearchModule);
