@@ -3,10 +3,10 @@
  */
 export class RemovePrefixModule {
     _removePrefix () {
-        $(this).val($(this).val().replace(/OIT-/, ''));
+        $(this).val($(this).val().trim().replace(/^OIT-/, ''));
     }  
     
     install() {
-        $("#input-barcode, textarea[id^='rapid']").on("keydown", this._removePrefix);
+        $(".autocomplete-input").on("input", this._removePrefix);
     }
 }
