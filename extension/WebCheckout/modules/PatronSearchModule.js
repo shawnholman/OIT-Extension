@@ -6,12 +6,12 @@ let patronTimer;
 
 const elements = {
     // The input to find patrons on the checkout page.
-    patronSearchInput: "#nameInput .autocomplete-input",
+    patronSearchInput: "#nameInput input",
     // The input to find resources on the checkout page.
     resourceSearchInput: "#resourceInput .autocomplete-input",
     //
     patronProperties: ".personProperties"
-}
+};
 
 /**
  * The PatronSearchModule improves the experience of searching for a patron by linking the search with the OITLogging
@@ -50,12 +50,10 @@ export class PatronSearchModule {
         }
     }
     
-    _setWebCheckoutPatron (id) {
+    _setWebCheckoutPatron (id, userid) {
         return Requests.setPatron(id).then(function (patron) {
             $(elements.patronSearchInput).css('color', 'black').blur().val(patron.name);
-            //$('.patron-info').removeClass('hidden');
-            //$(".patron-info-id").text(patron.userid);
-            //$(".patron-info-dept").text(" Dept: " + patron.department);
+            $(elements.patronProperties).removeClass('hidden').empty().append(`<span class="personProp margin-left-10">ID: ${userid}</span>`);
             $(elements.resourceSearchInput).focus(); // add focus to input where you scan barcodes so that you do not have to click it
             $('.messages').html('<div class="message-error">No resources or resource types selected.</div>');
             $.featherlight.close();
@@ -63,30 +61,31 @@ export class PatronSearchModule {
     }
 
     _searchPatron(immediate) {
-        let patron = $(elements.patronSearchInput).val();
-        
         clearTimeout(patronTimer);
-        
-        if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters
-            $(elements.patronProperties).addClass('hidden');
-            $(elements.patronSearchInput).css('color', 'black');
-            return;
-        }
-        
-        // if the patron we are searching is being search by number then we need to do a few things
-        if (!isNaN(Number(patron)) && patron.length == 16) {
-            // Historic Context for this line of code:
-            // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits. 
-            // This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
-            // Any UGA ID Printed after April of 2019, now only displays the 81# while the barcode still scans all 16.
-            // For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
-            // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.
-            patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#
-        }
             
         patronTimer = setTimeout(async () => {
+            let patron = $(elements.patronSearchInput).val();
+
+            if (patron.length <= 2) { // we do not need to attempt a search until there is at least three characters
+                $(elements.patronProperties).addClass('hidden');
+                $(elements.patronSearchInput).css('color', 'black');
+                return;
+            }
+
+            // if the patron we are searching is being search by number then we need to do a few things
+            if (!isNaN(Number(patron)) && patron.length == 16) {
+                // Historic Context for this line of code:
+                // At the beginning of using the OITLogging System, the number on the back of UGA ID's contained 16 digits.
+                // This was 6 digits in front and 1 digit after the uga 81#. For example, 1234568111234560 (notice the 81# inside of this)
+                // Any UGA ID Printed after April of 2019, now only displays the 81# while the barcode still scans all 16.
+                // For this reason, we decided to move OITLogging to using only the 9-digit 81# as well. This means that
+                // when scanning id's inside of WebCheckout, we have to only look for this ID number, hence the change you see below.
+                patron = patron.substring(6, 15); // trim the full 16 digit UGA Id and just get the 81#
+            }
+
             this._findPatronWebCheckout(patron, (person) => {
-                this._setWebCheckoutPatron(person.oid);
+                clearTimeout(patronTimer);
+                this._setWebCheckoutPatron(person.oid, person.userid);
             }, async (multipleEntries) => {
                 try {
                     if (multipleEntries) {
@@ -105,7 +104,7 @@ export class PatronSearchModule {
                             $('#person-ticket .progress').hide();
                             
                             this._findPatronWebCheckout(patron, (person) => {
-                                this._setWebCheckoutPatron(person.oid);
+                                this._setWebCheckoutPatron(person.oid, person.userid);
                             });
                         }, (err) => {
                             $("#person-ticket").parent().prepend(`<div class="alert alert-danger"><strong>Error!</strong> ${err}</div>`);
@@ -115,11 +114,12 @@ export class PatronSearchModule {
                         });
                     });
                 } catch (message) {
+                    console.log(message, patron);
                     $(elements.patronSearchInput).css('color', 'red');
-                    $(elements.patronProperties).removeClass('hidden').find('.patron-info-id').text(message)
+                    $(elements.patronProperties).removeClass('hidden').empty().append(`<span class="personProp margin-left-10">${message}</span>`);
                 }
             });
-        }, immediate === true ? 0 : 50);
+        }, immediate ? 0 : 250);
     }
     
     async _test() {
@@ -135,13 +135,17 @@ export class PatronSearchModule {
     }
     
     install() {
-        $(elements.patronSearchInput).on("keyup", this._searchPatron.bind(this));
-
+        $(elements.patronSearchInput).on("input change", (e) => {
+            const isChangeEvent = !e.originalEvent.inputType;
+            if (isChangeEvent || e.originalEvent.inputType !== "deleteContentBackward") {
+                this._searchPatron.call(this);
+            }
+        });
         // Whenever the operator types in a patron, they can hit enter before this script can have a chance
         // to autocomplete. When this happens, you are prompted with a box to select a user. Once you select
         // a user, the follow piece of code just makes the patron name turn back from red to black.
-        $(document).on("click", ".ui-dialog-buttonset .ui-button-text", function () {
-            $(elements.patronSearchInput).css("color", "black");
+        $(document).on("click", ".autocomplete-option", function () {
+            $(elements.patronSearchInput).trigger("change").css("color", "black");
         });
     }
 }
