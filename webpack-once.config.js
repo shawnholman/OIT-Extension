@@ -15,7 +15,7 @@ module.exports = {
 		minimize: false
 	},
     output: {
-        path: '/Users/mediadsk/Desktop/OIT-Extension/extension/WebCheckout',
+        path: path.join(__dirname, "extension/WebCheckout"),
         filename: '[name].build.js'
     }
 };

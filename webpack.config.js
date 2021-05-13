@@ -11,7 +11,7 @@ module.exports = {
         extensions: [".webpack.js", ".web.js", ".ts", ".js", ".json"]
     },
     output: {
-        path: '/Users/mediadsk/Desktop/OIT-Extension/extension/WebCheckout',
+        path: path.join(__dirname, "extension/WebCheckout"),
         filename: '[name].build.js'
     },
     watch: true
