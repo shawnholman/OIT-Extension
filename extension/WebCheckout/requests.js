@@ -98,13 +98,17 @@ export let Requests = {
      * @return {Promise}
      */
     autocomplete: {
-        resource: function (string) {
+        resource: function (searchString) {
             return new Promise (function (resolve) {
                 $.ajax({
-                    url: HOST + '/webcheckout/rest/resourceType/autocomplete',
+                    url: HOST + '/rest/resourceType/search',
                     type: "POST",
                     dataType: "json",
-                    data: `{"string": "${string}", "properties": ["name", "description"]}`,
+                    data: JSON.stringify({
+                        "multiQuery":[
+                            {"query":{"and":{"organization":{"_class":"organization","oid":5835306,"name":"OIT"},"name":searchString}},"limit":20,"orderBy":"name"}
+                        ],
+                    }),
                     contentType: "application/json",
                     headers: {
                         Accept: "application/json, text/plain, */*"
@@ -116,16 +120,15 @@ export let Requests = {
                         if (d == null || d.payload == null) resolve([]);
                         else {
                             let resources = [];
-                            let results = d.payload;
+                            let resultSet = d.payload;
 
-                            for (let result of results) {
-                                if (result.label == "OIT") {
-                                    for (let value of result.values) {
-                                        resources.push({
-                                            oid: value.oid,
-                                            name: value.name
-                                        });
-                                    }
+                            for (let results of resultSet) {
+                                if (results.count === 0) continue;
+                                for (let result of results.result) {
+                                    resources.push({
+                                        oid: result.oid,
+                                        name: result.name
+                                    });
                                 }
                             }
                             resolve(resources);
@@ -255,7 +258,7 @@ export let Requests = {
                             let reg = /\?method=resource&caller=new-resource-wizard-done&resource=([0-9]*)/;
                             let oid = resp.match(reg)[1];
                             $.ajax({
-                                url: HOST + '/webcheckout/rest/resource/update',
+                                url: HOST + '/rest/resource/update',
                                 type: "POST",
                                 dataType: "json",
                                 data: '{"oid": ' + oid + ', "values": {"description": "' + description + '"}}',

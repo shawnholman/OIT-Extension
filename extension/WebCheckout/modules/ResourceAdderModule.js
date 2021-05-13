@@ -124,7 +124,7 @@ async function addAllResources() { // Add Resources
     });
 
     req.progress(function (prog, frame) { // progress as the resources are added
-        const frameHasFinishingProperty = Object.prototype.hasOwnProperty.call(frame, 'finishing');
+        const frameHasFinishingProperty = frame != null && Object.prototype.hasOwnProperty.call(frame, 'finishing');
         const cantCancel = (frame != null && frameHasFinishingProperty && frame.finishing == true) || prog.total - prog.completed == 1;
 
         $('#cancel').attr('disabled', cantCancel);
